@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify
 import os
 import requests
+import json
 from datetime import datetime
 
 app = Flask(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-BOT_USERNAME = os.environ.get("BOT_USERNAME", "AkumaUCBOT")
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "akuma_ucbot")
 ADMIN_ID = os.environ.get("ADMIN_ID", "8504217011")
 
 orders_db = {}
@@ -27,7 +28,8 @@ PRODUCTS = {
     "1800": {"amount": 1800, "price": 1905}
 }
 
-HTML = '''<!DOCTYPE html>
+HTML = '''
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -46,72 +48,85 @@ HTML = '''<!DOCTYPE html>
         .product-card:hover{background:rgba(255,255,255,0.1);}
         .product-amount{font-size:20px;font-weight:bold;color:#ffcc00;}
         .product-price{font-size:14px;color:#aaa;margin-top:5px;}
-        .btn-buy{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a1a2e;font-size:18px;font-weight:bold;cursor:pointer;}
         .footer{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}
         .footer a{color:#ffcc00;}
+        .loading{text-align:center;padding:40px;color:#888;}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 AKUMA UC SHOP</h1>
+            <h1>AKUMA UC SHOP</h1>
             <p>Быстрая покупка UC | 24/7</p>
         </div>
         <div class="id-section">
             <input type="number" id="pubg_id" placeholder="Введите PUBG ID (начинается с 5)">
         </div>
         <div class="products" id="products">
-            <div style="text-align:center;padding:20px;">Загрузка...</div>
+            <div class="loading">Загрузка...</div>
         </div>
         <div class="footer">
             <p>Вопросы: <a href="https://t.me/aakumma">@aakumma</a></p>
         </div>
     </div>
     <script>
-        const products = {{ products|tojson }};
-        const botUsername = "{{ bot_username }}";
+        const products = {products};
+        const botUsername = "{bot_username}";
         
-        function renderProducts() {
+        function renderProducts() {{
             const container = document.getElementById('products');
+            if (!products || Object.keys(products).length === 0) {{
+                container.innerHTML = '<div class="loading">Нет товаров</div>';
+                return;
+            }}
             let html = '';
-            for (const [key, product] of Object.entries(products)) {
-                html += `<div class="product-card" onclick="createOrder('${key}')">
-                            <div class="product-amount">${product.amount} UC</div>
-                            <div class="product-price">${product.price} ₽</div>
-                        </div>`;
-            }
+            for (const [key, product] of Object.entries(products)) {{
+                html += '<div class="product-card" onclick="createOrder(' + key + ')">' +
+                        '<div class="product-amount">' + product.amount + ' UC</div>' +
+                        '<div class="product-price">' + product.price + ' ₽</div>' +
+                        '</div>';
+            }}
             container.innerHTML = html;
-        }
+        }}
         
-        async function createOrder(amount) {
+        async function createOrder(amount) {{
             const pubgId = document.getElementById('pubg_id').value;
-            if (!pubgId) { alert('Введите PUBG ID'); return; }
-            if (!pubgId.toString().startsWith('5') || pubgId.length < 10) { alert('PUBG ID должен начинаться с 5 (10+ цифр)'); return; }
-            
-            const res = await fetch('/create-order', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({pubg_id: pubgId, amount: amount})
-            });
-            const data = await res.json();
-            if (data.ok) {
-                window.location.href = `https://t.me/${botUsername}?start=web_${data.order_id}`;
-            } else {
-                alert('Ошибка создания заказа');
-            }
-        }
+            if (!pubgId) {{ alert('Введите PUBG ID'); return; }}
+            if (!pubgId.toString().startsWith('5') || pubgId.length < 10) {{
+                alert('PUBG ID должен начинаться с 5 (10+ цифр)');
+                return;
+            }}
+            try {{
+                const res = await fetch('/create-order', {{
+                    method: 'POST',
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify({{pubg_id: pubgId, amount: amount}})
+                }});
+                const data = await res.json();
+                if (data.ok) {{
+                    window.location.href = 'https://t.me/' + botUsername + '?start=' + data.order_id;
+                }} else {{
+                    alert('Ошибка создания заказа');
+                }}
+            }} catch(e) {{
+                alert('Ошибка сервера');
+            }}
+        }}
         
         renderProducts();
     </script>
 </body>
-</html>'''
+</html>
+'''
 
 def send_notification(order_id, pubg_id, amount, price):
+    if not BOT_TOKEN:
+        return
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         payload = {
             "chat_id": ADMIN_ID,
-            "text": f"🆕 **ЗАКАЗ С САЙТА**\nНомер: #{order_id}\nPUBG ID: {pubg_id}\nUC: {amount}\nСумма: {price}₽",
+            "text": f"НОВЫЙ ЗАКАЗ С САЙТА\nНомер: #{order_id}\nPUBG ID: {pubg_id}\nUC: {amount}\nСумма: {price}₽",
             "parse_mode": "Markdown"
         }
         requests.post(url, json=payload)
@@ -120,7 +135,7 @@ def send_notification(order_id, pubg_id, amount, price):
 
 @app.route('/')
 def index():
-    return HTML.replace('{{ products|tojson }}', json.dumps(PRODUCTS)).replace('{{ bot_username }}', BOT_USERNAME)
+    return HTML.replace('{products}', json.dumps(PRODUCTS)).replace('{bot_username}', BOT_USERNAME)
 
 @app.route('/create-order', methods=['POST'])
 def create_order():
@@ -132,7 +147,7 @@ def create_order():
     if not pubg_id or not amount:
         return jsonify({'error': 'Missing data'}), 400
     
-    product = PRODUCTS.get(amount)
+    product = PRODUCTS.get(str(amount))
     if not product:
         return jsonify({'error': 'Invalid amount'}), 400
     
@@ -150,19 +165,6 @@ def create_order():
     
     return jsonify({'ok': True, 'order_id': order_id})
 
-@app.route('/order/<int:order_id>')
-def get_order(order_id):
-    order = orders_db.get(order_id)
-    if not order:
-        return jsonify({'error': 'Not found'}), 404
-    return jsonify(order)
-
 @app.route('/products')
 def get_products():
     return jsonify(PRODUCTS)
-
-# Для Vercel
-app = app
-
-if __name__ == '__main__':
-    app.run()
