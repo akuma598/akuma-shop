@@ -28,21 +28,21 @@ HTML = f'''<!DOCTYPE html>
     <title>NeoN UC BOT 24/7</title>
     <style>
         *{{margin:0;padding:0;box-sizing:border-box;}}
-        body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;padding:20px;}}
+        body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#4a0080,#2e004d,#1a0033);min-height:100vh;color:#fff;padding:20px;}}
         .container{{max-width:600px;margin:0 auto;}}
         .header{{text-align:center;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px;}}
         .header h1{{font-size:24px;background:linear-gradient(135deg,#ffcc00,#ff9900);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}}
-        .header p{{color:#888;font-size:12px;margin-top:5px;}}
+        .header p{{color:#b87dff;font-size:12px;margin-top:5px;}}
         .tabs{{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}}
         .tab{{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}}
-        .tab.active{{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}}
+        .tab.active{{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a0033;}}
         .section-image{{width:100%;border-radius:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);}}
-        .product-card{{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);}}
+        .product-card{{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);}}
         .product-card:hover{{background:rgba(255,255,255,0.1);border-color:#ffcc00;}}
         .product-info h3{{font-size:18px;margin-bottom:5px;}}
         .product-info .price{{color:#ffcc00;font-weight:bold;}}
         .product-actions{{display:flex;align-items:center;}}
-        .buy-btn,.select-btn{{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a1a2e;font-weight:bold;cursor:pointer;font-size:14px;}}
+        .buy-btn,.select-btn{{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a0033;font-weight:bold;cursor:pointer;font-size:14px;}}
         .buy-btn:hover,.select-btn:hover{{opacity:0.9;}}
         .cart-section{{background:rgba(0,0,0,0.5);border-radius:16px;padding:20px;margin-top:20px;border:1px solid rgba(255,204,0,0.3);}}
         .cart-header{{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}}
@@ -53,14 +53,16 @@ HTML = f'''<!DOCTYPE html>
         .cart-total{{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.2);font-size:18px;font-weight:bold;text-align:right;color:#ffcc00;}}
         .pubg-section{{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin:20px 0;}}
         .pubg-section input{{width:100%;padding:14px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;font-size:16px;outline:none;}}
+        .pubg-section input:focus{{border-color:#ffcc00;}}
         .payment-methods{{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0;}}
         .payment-btn{{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all 0.2s;}}
         .payment-btn:hover,.payment-btn.selected{{border-color:#ffcc00;background:rgba(255,204,0,0.1);}}
         .payment-btn.selected{{border-color:#ffcc00;background:rgba(255,204,0,0.2);}}
         .payment-btn .method-name{{font-weight:bold;margin-bottom:5px;}}
-        .payment-btn .method-desc{{font-size:11px;color:#888;}}
-        .checkout-btn{{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a1a2e;font-size:18px;font-weight:bold;cursor:pointer;margin-top:20px;}}
-        .footer{{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}}
+        .payment-btn .method-desc{{font-size:11px;color:#b87dff;}}
+        .checkout-btn{{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a0033;font-size:18px;font-weight:bold;cursor:pointer;margin-top:20px;}}
+        .checkout-btn:hover{{opacity:0.9;}}
+        .footer{{text-align:center;padding:20px;font-size:12px;color:#b87dff;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}}
         .footer a{{color:#ffcc00;text-decoration:none;}}
         .hide{{display:none;}}
     </style>
@@ -227,9 +229,10 @@ HTML = f'''<!DOCTYPE html>
             for (const [key, product] of Object.entries(costumesProducts)) {{
                 html += '<div class="product-card">' +
                     '<div class="product-info">' +
-                        '<img src="' + product.image + '" style="width:50px;height:50px;border-radius:10px;margin-right:15px;vertical-align:middle;">' +
-                        '<h3 style="display:inline-block;">' + product.name + '</h3>' +
-                        '<div class="price">' + product.price + ' ₽</div>' +
+                        '<div style="display:flex;align-items:center;gap:15px;">' +
+                            '<img src="' + product.image + '" style="width:50px;height:50px;border-radius:10px;object-fit:cover;">' +
+                            '<div><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                        '</div>' +
                     '</div>' +
                     '<div class="product-actions"><button class="select-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
@@ -253,7 +256,7 @@ HTML = f'''<!DOCTYPE html>
                 total += itemTotal;
                 html += '<div class="cart-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + itemTotal + ' ₽</span></div>';
             }}
-            container.innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
+            container.innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#b87dff;">Корзина пуста</div>' : html;
             document.getElementById('cart-total').innerHTML = 'Итого: ' + total + ' ₽';
         }}
         
@@ -334,7 +337,8 @@ def create_order():
     order_id = order_counter
     order_counter += 1
     
-    temp_orders[order_id] = {
+    # Сохраняем заказ с деталями
+    order_details = {
         'pubg_id': pubg_id,
         'items': items,
         'total': total,
@@ -342,18 +346,25 @@ def create_order():
         'status': 'pending',
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
+    temp_orders[order_id] = order_details
     
+    # Отправляем уведомление админу с полной информацией
     if BOT_TOKEN:
         try:
-            items_text = '\n'.join([f"{item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
+            items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
+            total_text = f"\n\n💰 **ИТОГО: {total}₽**"
+            
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер заказа: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}{total_text}\n💳 Способ оплаты: {payment_method}"
+            
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
                 "chat_id": ADMIN_ID,
-                "text": f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 Товары:\n{items_text}\n💰 Итого: {total}₽\n💳 Оплата: {payment_method}",
+                "text": admin_text,
                 "parse_mode": "Markdown"
             }
             requests.post(url, json=payload)
-        except:
-            pass
+            print(f"✅ Уведомление отправлено админу: Заказ #{order_id} на {total}₽")
+        except Exception as e:
+            print(f"❌ Ошибка отправки уведомления: {e}")
     
     return jsonify({'ok': True, 'order_id': order_id})
