@@ -29,6 +29,7 @@ HTML = '''<!DOCTYPE html>
         .tabs{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}
         .tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}
         .tab.active{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}
+        .products-container{min-height:300px;}
         .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);}
         .product-card:hover{background:rgba(255,255,255,0.1);border-color:#ffcc00;}
         .product-info h3{font-size:18px;margin-bottom:5px;}
@@ -76,10 +77,12 @@ HTML = '''<!DOCTYPE html>
             <div class="tab" data-tab="costumes">X-костюмы</div>
         </div>
         
-        <div id="tab-uc"><div id="uc-products"></div></div>
-        <div id="tab-pp" class="hide"><div id="pp-products"></div></div>
-        <div id="tab-prime" class="hide"><div id="prime-products"></div></div>
-        <div id="tab-costumes" class="hide"><div id="costumes-products"></div></div>
+        <div class="products-container">
+            <div id="tab-uc"><div id="uc-products"></div></div>
+            <div id="tab-pp" class="hide"><div id="pp-products"></div></div>
+            <div id="tab-prime" class="hide"><div id="prime-products"></div></div>
+            <div id="tab-costumes" class="hide"><div id="costumes-products"></div></div>
+        </div>
         
         <div class="cart-section">
             <div class="cart-header">
@@ -172,7 +175,9 @@ HTML = '''<!DOCTYPE html>
         let currentTab = 'uc';
         
         function renderUCProducts() {
+            console.log("Рендер UC товаров, количество:", Object.keys(ucProducts).length);
             const container = document.getElementById('uc-products');
+            if (!container) return;
             let html = '';
             for (const [key, product] of Object.entries(ucProducts)) {
                 const qty = cart[key] ? cart[key].quantity : 0;
@@ -191,7 +196,9 @@ HTML = '''<!DOCTYPE html>
         }
         
         function renderPPProducts() {
+            console.log("Рендер ПП товаров, количество:", Object.keys(ppProducts).length);
             const container = document.getElementById('pp-products');
+            if (!container) return;
             let html = '';
             for (const [key, product] of Object.entries(ppProducts)) {
                 html += '<div class="product-card">' +
@@ -203,7 +210,9 @@ HTML = '''<!DOCTYPE html>
         }
         
         function renderPrimeProducts() {
+            console.log("Рендер Prime товаров, количество:", Object.keys(primeProducts).length);
             const container = document.getElementById('prime-products');
+            if (!container) return;
             let html = '';
             for (const [key, product] of Object.entries(primeProducts)) {
                 html += '<div class="product-card">' +
@@ -215,7 +224,9 @@ HTML = '''<!DOCTYPE html>
         }
         
         function renderCostumesProducts() {
+            console.log("Рендер костюмов, количество:", Object.keys(costumesProducts).length);
             const container = document.getElementById('costumes-products');
+            if (!container) return;
             let html = '';
             for (const [key, product] of Object.entries(costumesProducts)) {
                 html += '<div class="product-card">' +
@@ -357,6 +368,13 @@ HTML = '''<!DOCTYPE html>
         document.getElementById('goToBotBtn').onclick = function() {
             window.location.href = botLink;
         };
+        
+        // Принудительный рендер
+        console.log("Сайт загружен, товары:");
+        console.log("UC:", Object.keys(ucProducts).length);
+        console.log("ПП:", Object.keys(ppProducts).length);
+        console.log("Prime:", Object.keys(primeProducts).length);
+        console.log("Костюмы:", Object.keys(costumesProducts).length);
     </script>
 </body>
 </html>'''
@@ -375,6 +393,7 @@ def create_order():
     payment_method = data.get('payment_method')
     
     print(f"📥 НОВЫЙ ЗАКАЗ: pubg_id={pubg_id}, total={total}, payment={payment_method}")
+    print(f"📦 ТОВАРЫ: {items}")
     
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
