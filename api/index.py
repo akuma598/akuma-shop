@@ -13,49 +13,6 @@ ADMIN_ID = os.environ.get("ADMIN_ID", "8504217011")
 temp_orders = {}
 order_counter = 1
 
-# ===== ТОВАРЫ UC (15 позиций) =====
-UC_PRODUCTS = {
-    "60": {"name": "60 UC", "price": 87},
-    "120": {"name": "120 UC", "price": 152},
-    "180": {"name": "180 UC", "price": 223},
-    "240": {"name": "240 UC", "price": 293},
-    "325": {"name": "325 UC", "price": 387},
-    "385": {"name": "385 UC", "price": 434},
-    "445": {"name": "445 UC", "price": 482},
-    "660": {"name": "660 UC", "price": 756},
-    "720": {"name": "720 UC", "price": 771},
-    "985": {"name": "985 UC", "price": 1049},
-    "1320": {"name": "1320 UC", "price": 1401},
-    "1800": {"name": "1800 UC", "price": 1891},
-    "3850": {"name": "3850 UC", "price": 3753},
-    "8100": {"name": "8100 UC", "price": 7243},
-    "9900": {"name": "9900 UC", "price": 9790}
-}
-
-# ===== ТОВАРЫ ПП (6 позиций) =====
-PP_PRODUCTS = {
-    "10000": {"name": "10 000 ПП", "price": 152},
-    "20000": {"name": "20 000 ПП", "price": 289},
-    "30000": {"name": "30 000 ПП", "price": 424},
-    "40000": {"name": "40 000 ПП", "price": 561},
-    "50000": {"name": "50 000 ПП", "price": 696},
-    "60000": {"name": "60 000 ПП", "price": 833}
-}
-
-# ===== ПОДПИСКИ PRIME (4 позиции) =====
-PRIME_PRODUCTS = {
-    "1m": {"name": "Prime (1 месяц)", "price": 125},
-    "3m": {"name": "Prime (3 месяца)", "price": 318},
-    "6m": {"name": "Prime (6 месяцев)", "price": 550},
-    "12m": {"name": "Prime (12 месяцев)", "price": 1027}
-}
-
-# ===== X-КОСТЮМЫ (2 позиции) =====
-COSTUMES_PRODUCTS = {
-    "1": {"name": "X-КОСТЮМ Ворон", "price": 4500},
-    "2": {"name": "X-КОСТЮМ Феникстра", "price": 4500}
-}
-
 HTML = '''<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -83,6 +40,7 @@ HTML = '''<!DOCTYPE html>
         .cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
         .cart-header h3{font-size:18px;}
         .clear-cart{background:rgba(255,0,0,0.2);border:1px solid #ff4444;color:#ff4444;padding:8px 15px;border-radius:10px;cursor:pointer;font-size:14px;}
+        .clear-cart:hover{background:rgba(255,0,0,0.3);}
         .cart-item{display:flex;justify-content:space-between;margin-bottom:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);}
         .cart-total{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.2);font-size:18px;font-weight:bold;text-align:right;color:#ffcc00;}
         .pubg-section{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin:20px 0;}
@@ -102,7 +60,7 @@ HTML = '''<!DOCTYPE html>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 Akuma UC BOT 24/7</h1>
+            <h1>🔥 NeoN UC BOT 24/7</h1>
             <p>Быстрая покупка UC | 24/7 | Мгновенная выдача</p>
         </div>
         
@@ -158,6 +116,8 @@ HTML = '''<!DOCTYPE html>
     </div>
     
     <script>
+        // ===== ВСЕ ТОВАРЫ =====
+        
         // UC ТОВАРЫ (15 штук)
         const ucProducts = {
             "60": {"name": "60 UC", "price": 87},
@@ -197,8 +157,8 @@ HTML = '''<!DOCTYPE html>
         
         // X-КОСТЮМЫ (2 штуки)
         const costumesProducts = {
-            "1": {"name": "X-КОСТЮМ Ворон", "price": 4500},
-            "2": {"name": "X-КОСТЮМ Феникстра", "price": 4500}
+            "1": {"name": "🐦‍⬛ Ворон", "price": 4500},
+            "2": {"name": "🔥 Феникс", "price": 4500}
         };
         
         const botUsername = "akuma_ucbot";
@@ -206,7 +166,6 @@ HTML = '''<!DOCTYPE html>
         let cart = {};
         let selectedPayment = null;
         
-        // ОТОБРАЖЕНИЕ UC ТОВАРОВ
         function renderUCProducts() {
             const container = document.getElementById('uc-products');
             let html = '';
@@ -217,10 +176,8 @@ HTML = '''<!DOCTYPE html>
                 '</div>';
             }
             container.innerHTML = html;
-            console.log('UC товаров загружено:', Object.keys(ucProducts).length);
         }
         
-        // ОТОБРАЖЕНИЕ ПП ТОВАРОВ
         function renderPPProducts() {
             const container = document.getElementById('pp-products');
             let html = '';
@@ -231,10 +188,8 @@ HTML = '''<!DOCTYPE html>
                 '</div>';
             }
             container.innerHTML = html;
-            console.log('ПП товаров загружено:', Object.keys(ppProducts).length);
         }
         
-        // ОТОБРАЖЕНИЕ PRIME ТОВАРОВ
         function renderPrimeProducts() {
             const container = document.getElementById('prime-products');
             let html = '';
@@ -245,10 +200,8 @@ HTML = '''<!DOCTYPE html>
                 '</div>';
             }
             container.innerHTML = html;
-            console.log('Prime товаров загружено:', Object.keys(primeProducts).length);
         }
         
-        // ОТОБРАЖЕНИЕ X-КОСТЮМОВ
         function renderCostumesProducts() {
             const container = document.getElementById('costumes-products');
             let html = '';
@@ -259,7 +212,6 @@ HTML = '''<!DOCTYPE html>
                 '</div>';
             }
             container.innerHTML = html;
-            console.log('X-костюмов загружено:', Object.keys(costumesProducts).length);
         }
         
         function addToCart(key, name, price) {
@@ -327,12 +279,10 @@ HTML = '''<!DOCTYPE html>
                     alert('❌ Ошибка при создании заказа');
                 }
             } catch (error) {
-                console.error('Error:', error);
                 alert('❌ Ошибка сервера');
             }
         }
         
-        // ЗАПУСК
         renderUCProducts();
         renderPPProducts();
         renderPrimeProducts();
@@ -380,7 +330,7 @@ def create_order():
                 "parse_mode": "Markdown"
             }
             requests.post(url, json=payload)
-        except Exception as e:
-            print(f"Ошибка: {e}")
+        except:
+            pass
     
     return jsonify({'ok': True, 'order_id': order_id})
