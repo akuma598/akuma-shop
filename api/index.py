@@ -138,7 +138,7 @@ HTML = f'''<!DOCTYPE html>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 Akuma UC BOT 24/7</h1>
+            <h1>🔥 NeoN UC BOT 24/7</h1>
             <p>Быстрая покупка UC | 24/7 | Мгновенная выдача</p>
         </div>
         
@@ -209,6 +209,10 @@ HTML = f'''<!DOCTYPE html>
     </div>
     
     <script>
+        // Сохраняем корзину в localStorage
+        let cart = JSON.parse(localStorage.getItem('cart')) || {{}};
+        let selectedPayment = localStorage.getItem('selectedPayment') || null;
+        
         const ucProducts = {{
             "60": {{"name": "60 UC", "price": 87, "icon": "{UC_IMAGE}"}},
             "120": {{"name": "120 UC", "price": 152, "icon": "{UC_IMAGE}"}},
@@ -250,13 +254,16 @@ HTML = f'''<!DOCTYPE html>
         
         const botUsername = "{BOT_USERNAME}";
         
-        let cart = {{}};
-        let selectedPayment = null;
+        function saveCart() {{
+            localStorage.setItem('cart', JSON.stringify(cart));
+            localStorage.setItem('selectedPayment', selectedPayment);
+        }}
         
         function renderUCProducts() {{
             const container = document.getElementById('uc-products');
             let html = '';
             for (const [key, product] of Object.entries(ucProducts)) {{
+                const qty = cart[key] ? cart[key].quantity : 0;
                 html += '<div class="product-card">' +
                     '<div class="product-info">' +
                         '<img class="product-icon" src="' + product.icon + '" alt="icon">' +
@@ -265,10 +272,29 @@ HTML = f'''<!DOCTYPE html>
                             '<div class="price">' + product.price + ' ₽</div>' +
                         '</div>' +
                     '</div>' +
-                    '<div class="product-actions"><button class="buy-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Купить</button></div>' +
+                    '<div class="product-actions">' +
+                        '<div class="quantity-control" style="display:flex;align-items:center;gap:10px;">' +
+                            '<button class="quantity-btn" style="background:rgba(255,255,255,0.1);border:none;width:30px;height:30px;border-radius:8px;color:#fff;font-size:18px;cursor:pointer;" onclick="updateQuantity(\\'' + key + '\\', -1)">-</button>' +
+                            '<span style="min-width:30px;text-align:center;">' + qty + '</span>' +
+                            '<button class="quantity-btn" style="background:rgba(255,255,255,0.1);border:none;width:30px;height:30px;border-radius:8px;color:#fff;font-size:18px;cursor:pointer;" onclick="updateQuantity(\\'' + key + '\\', 1)">+</button>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>';
             }}
             container.innerHTML = html;
+        }}
+        
+        function updateQuantity(key, delta) {{
+            if (!cart[key]) cart[key] = {{name: ucProducts[key].name, price: ucProducts[key].price, quantity: 0}};
+            let newQty = cart[key].quantity + delta;
+            if (newQty <= 0) {{
+                delete cart[key];
+            }} else {{
+                cart[key].quantity = newQty;
+            }}
+            saveCart();
+            updateCartDisplay();
+            renderUCProducts();
         }}
         
         function renderPPProducts() {{
@@ -328,6 +354,7 @@ HTML = f'''<!DOCTYPE html>
         function addToCart(key, name, price) {{
             if (!cart[key]) cart[key] = {{name: name, price: price, quantity: 0}};
             cart[key].quantity++;
+            saveCart();
             updateCartDisplay();
             alert('✅ ' + name + ' добавлен в корзину');
         }}
@@ -347,12 +374,15 @@ HTML = f'''<!DOCTYPE html>
         
         function clearCart() {{
             cart = {{}};
+            saveCart();
             updateCartDisplay();
+            renderUCProducts();
             alert('🗑 Корзина очищена');
         }}
         
         function selectPayment(method) {{
             selectedPayment = method;
+            saveCart();
             document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
             document.querySelector(`.payment-btn[data-method="${{method}}"]`).classList.add('selected');
         }}
@@ -374,10 +404,6 @@ HTML = f'''<!DOCTYPE html>
         }}
         
         function goToBot() {{
-            // Закрываем текущее окно/вкладку
-            window.close();
-            
-            // Открываем бота
             window.location.href = 'https://t.me/' + botUsername;
         }}
         
@@ -408,8 +434,11 @@ HTML = f'''<!DOCTYPE html>
                 if (data.ok && data.order_id) {{
                     showOrderModal(data.order_id, total);
                     cart = {{}};
+                    saveCart();
                     updateCartDisplay();
+                    renderUCProducts();
                     selectedPayment = null;
+                    saveCart();
                     document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
                 }} else {{
                     alert('❌ Ошибка при создании заказа');
@@ -417,6 +446,12 @@ HTML = f'''<!DOCTYPE html>
             }} catch (error) {{
                 alert('❌ Ошибка сервера');
             }}
+        }}
+        
+        // Восстанавливаем выбранный способ оплаты
+        if (selectedPayment) {{
+            const btn = document.querySelector(`.payment-btn[data-method="${{selectedPayment}}"]`);
+            if (btn) btn.classList.add('selected');
         }}
         
         renderUCProducts();
@@ -441,6 +476,9 @@ def create_order():
     total = data.get('total')
     payment_method = data.get('payment_method')
     
+    print(f"📥 ПОЛУЧЕН ЗАКАЗ: pubg_id={pubg_id}, total={total}, payment={payment_method}")
+    print(f"📦 ТОВАРЫ: {items}")
+    
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
     
@@ -456,10 +494,11 @@ def create_order():
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
+    # Отправляем уведомление админу
     if BOT_TOKEN:
         try:
             items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
-            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}\n\n👤 Для связи: @{data.get('username', 'не указан')}"
             
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
@@ -467,8 +506,11 @@ def create_order():
                 "text": admin_text,
                 "parse_mode": "Markdown"
             }
-            requests.post(url, json=payload)
+            response = requests.post(url, json=payload)
+            print(f"✅ Уведомление админу отправлено: {response.status_code}")
         except Exception as e:
-            print(f"Ошибка: {e}")
+            print(f"❌ Ошибка отправки уведомления: {e}")
+    else:
+        print("❌ BOT_TOKEN не установлен!")
     
     return jsonify({'ok': True, 'order_id': order_id})
