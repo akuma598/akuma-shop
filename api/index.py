@@ -13,32 +13,39 @@ ADMIN_ID = os.environ.get("ADMIN_ID", "8504217011")
 temp_orders = {}
 order_counter = 1
 
-# Товары UC
+# ===== ТОВАРЫ UC (цены +15₽) =====
 UC_PRODUCTS = {
-    "60": {"amount": "60 UC", "price": 72, "old_price": 80},
-    "325": {"amount": "325 UC", "price": 372, "old_price": 410},
-    "660": {"amount": "660 UC", "price": 741, "old_price": 820},
-    "1800": {"amount": "1800 UC", "price": 1876, "old_price": 2080},
-    "3850": {"amount": "3850 UC", "price": 3738, "old_price": 4150},
-    "8100": {"amount": "8100 UC", "price": 7228, "old_price": 8030}
+    "60": {"name": "60 UC", "price": 87, "old_price": 95},
+    "325": {"name": "325 UC", "price": 387, "old_price": 425},
+    "660": {"name": "660 UC", "price": 756, "old_price": 835},
+    "1800": {"name": "1800 UC", "price": 1891, "old_price": 2095},
+    "3850": {"name": "3850 UC", "price": 3753, "old_price": 4165},
+    "8100": {"name": "8100 UC", "price": 7243, "old_price": 8045}
 }
 
-# Товары ПП (Популярность)
+# ===== ТОВАРЫ ПП (Популярность, +15₽) =====
 PP_PRODUCTS = {
-    "10000": {"amount": "10 000 ПП", "price": 137},
-    "20000": {"amount": "20 000 ПП", "price": 274},
-    "30000": {"amount": "30 000 ПП", "price": 409},
-    "40000": {"amount": "40 000 ПП", "price": 546},
-    "50000": {"amount": "50 000 ПП", "price": 681},
-    "60000": {"amount": "60 000 ПП", "price": 818}
+    "10000": {"name": "10 000 ПП", "price": 152},
+    "20000": {"name": "20 000 ПП", "price": 289},
+    "30000": {"name": "30 000 ПП", "price": 424},
+    "40000": {"name": "40 000 ПП", "price": 561},
+    "50000": {"name": "50 000 ПП", "price": 696},
+    "60000": {"name": "60 000 ПП", "price": 833}
 }
 
-# Подписки Prime
-PRIME_SUBSCRIPTIONS = {
-    "1m": {"name": "Prime (1 месяц)", "price": 110},
-    "3m": {"name": "Prime (3 месяца)", "price": 303},
-    "6m": {"name": "Prime (6 месяцев)", "price": 535},
-    "12m": {"name": "Prime (12 месяцев)", "price": 1012}
+# ===== ПОДПИСКИ PRIME (+15₽) =====
+PRIME_PRODUCTS = {
+    "1m": {"name": "Prime (1 месяц)", "price": 125},
+    "3m": {"name": "Prime (3 месяца)", "price": 318},
+    "6m": {"name": "Prime (6 месяцев)", "price": 550},
+    "12m": {"name": "Prime (12 месяцев)", "price": 1027}
+}
+
+# ===== X-КОСТЮМЫ (+15₽) =====
+COSTUMES_PRODUCTS = {
+    "1": {"name": "X-КОСТЮМ Огненный демон", "price": 515},
+    "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 565},
+    "3": {"name": "X-КОСТЮМ Призрачный убийца", "price": 615}
 }
 
 HTML = '''<!DOCTYPE html>
@@ -48,288 +55,45 @@ HTML = '''<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>NeoN UC BOT 24/7</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            min-height: 100vh;
-            color: #fff;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            background: linear-gradient(135deg, #ffcc00, #ff9900);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .header p {
-            color: #888;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: rgba(255,255,255,0.05);
-            padding: 5px;
-            border-radius: 12px;
-        }
-        
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        
-        .tab.active {
-            background: linear-gradient(135deg, #ffcc00, #ff9900);
-            color: #1a1a2e;
-        }
-        
-        .product-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.2s;
-        }
-        
-        .product-card:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: #ffcc00;
-        }
-        
-        .product-info h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
-        }
-        
-        .product-info .price {
-            color: #ffcc00;
-            font-weight: bold;
-        }
-        
-        .product-info .old-price {
-            color: #888;
-            font-size: 12px;
-            text-decoration: line-through;
-            margin-left: 10px;
-        }
-        
-        .product-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .quantity-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .quantity-btn:hover {
-            background: #ffcc00;
-            color: #1a1a2e;
-        }
-        
-        .quantity {
-            font-size: 16px;
-            font-weight: bold;
-            min-width: 30px;
-            text-align: center;
-        }
-        
-        .select-btn {
-            background: linear-gradient(135deg, #ffcc00, #ff9900);
-            border: none;
-            padding: 8px 20px;
-            border-radius: 10px;
-            color: #1a1a2e;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        .select-btn:hover {
-            opacity: 0.9;
-        }
-        
-        .cart-section {
-            background: rgba(0,0,0,0.5);
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid rgba(255,204,0,0.3);
-        }
-        
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .cart-total {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            font-size: 18px;
-            font-weight: bold;
-            text-align: right;
-            color: #ffcc00;
-        }
-        
-        .pubg-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .pubg-section input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            background: rgba(0,0,0,0.3);
-            color: #fff;
-            font-size: 16px;
-            outline: none;
-        }
-        
-        .payment-methods {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin: 20px 0;
-        }
-        
-        .payment-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .payment-btn:hover, .payment-btn.selected {
-            border-color: #ffcc00;
-            background: rgba(255,204,0,0.1);
-        }
-        
-        .payment-btn.selected {
-            border-color: #ffcc00;
-            background: rgba(255,204,0,0.2);
-        }
-        
-        .payment-btn .method-name {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .payment-btn .method-desc {
-            font-size: 11px;
-            color: #888;
-        }
-        
-        .checkout-btn {
-            background: linear-gradient(135deg, #ffcc00, #ff9900);
-            border: none;
-            padding: 16px;
-            width: 100%;
-            border-radius: 12px;
-            color: #1a1a2e;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 12px;
-            color: #666;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            margin-top: 20px;
-        }
-        
-        .footer a {
-            color: #ffcc00;
-            text-decoration: none;
-        }
-        
-        .hide {
-            display: none;
-        }
-        
-        .cart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .clear-cart {
-            background: rgba(255,0,0,0.2);
-            border: 1px solid #ff4444;
-            color: #ff4444;
-            padding: 8px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .clear-cart:hover {
-            background: rgba(255,0,0,0.3);
-        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;padding:20px;}
+        .container{max-width:600px;margin:0 auto;}
+        .header{text-align:center;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px;}
+        .header h1{font-size:24px;background:linear-gradient(135deg,#ffcc00,#ff9900);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .header p{color:#888;font-size:12px;margin-top:5px;}
+        .tabs{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}
+        .tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}
+        .tab.active{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}
+        .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);transition:all 0.2s;}
+        .product-card:hover{background:rgba(255,255,255,0.1);border-color:#ffcc00;}
+        .product-info h3{font-size:18px;margin-bottom:5px;}
+        .product-info .price{color:#ffcc00;font-weight:bold;}
+        .product-info .old-price{color:#888;font-size:12px;text-decoration:line-through;margin-left:10px;}
+        .product-actions{display:flex;align-items:center;gap:15px;}
+        .quantity-control{display:flex;align-items:center;gap:10px;}
+        .quantity-btn{background:rgba(255,255,255,0.1);border:none;width:32px;height:32px;border-radius:8px;color:#fff;font-size:20px;cursor:pointer;transition:all 0.2s;}
+        .quantity-btn:hover{background:#ffcc00;color:#1a1a2e;}
+        .quantity{font-size:16px;font-weight:bold;min-width:30px;text-align:center;}
+        .select-btn{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a1a2e;font-weight:bold;cursor:pointer;transition:opacity 0.2s;}
+        .select-btn:hover{opacity:0.9;}
+        .cart-section{background:rgba(0,0,0,0.5);border-radius:16px;padding:20px;margin-top:20px;border:1px solid rgba(255,204,0,0.3);}
+        .cart-item{display:flex;justify-content:space-between;margin-bottom:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);}
+        .cart-total{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.2);font-size:18px;font-weight:bold;text-align:right;color:#ffcc00;}
+        .pubg-section{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin:20px 0;}
+        .pubg-section input{width:100%;padding:14px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;font-size:16px;outline:none;}
+        .payment-methods{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0;}
+        .payment-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all 0.2s;}
+        .payment-btn:hover,.payment-btn.selected{border-color:#ffcc00;background:rgba(255,204,0,0.1);}
+        .payment-btn.selected{border-color:#ffcc00;background:rgba(255,204,0,0.2);}
+        .payment-btn .method-name{font-weight:bold;margin-bottom:5px;}
+        .payment-btn .method-desc{font-size:11px;color:#888;}
+        .checkout-btn{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a1a2e;font-size:18px;font-weight:bold;cursor:pointer;margin-top:20px;}
+        .footer{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}
+        .footer a{color:#ffcc00;text-decoration:none;}
+        .hide{display:none;}
+        .cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+        .clear-cart{background:rgba(255,0,0,0.2);border:1px solid #ff4444;color:#ff4444;padding:8px 15px;border-radius:10px;cursor:pointer;font-size:14px;}
+        .clear-cart:hover{background:rgba(255,0,0,0.3);}
     </style>
 </head>
 <body>
@@ -346,21 +110,10 @@ HTML = '''<!DOCTYPE html>
             <div class="tab" onclick="switchTab('costumes')">X-костюмы</div>
         </div>
         
-        <div id="tab-uc">
-            <div id="uc-products"></div>
-        </div>
-        
-        <div id="tab-pp" class="hide">
-            <div id="pp-products"></div>
-        </div>
-        
-        <div id="tab-prime" class="hide">
-            <div id="prime-products"></div>
-        </div>
-        
-        <div id="tab-costumes" class="hide">
-            <div id="costumes-products"></div>
-        </div>
+        <div id="tab-uc"><div id="uc-products"></div></div>
+        <div id="tab-pp" class="hide"><div id="pp-products"></div></div>
+        <div id="tab-prime" class="hide"><div id="prime-products"></div></div>
+        <div id="tab-costumes" class="hide"><div id="costumes-products"></div></div>
         
         <div class="cart-section">
             <div class="cart-header">
@@ -375,7 +128,7 @@ HTML = '''<!DOCTYPE html>
             <input type="number" id="pubg_id" placeholder="Введите PUBG ID получателя (начинается с 5)">
         </div>
         
-        <div class="payment-methods" id="payment-methods">
+        <div class="payment-methods">
             <div class="payment-btn" onclick="selectPayment('sbp1')" data-method="sbp1">
                 <div class="method-name">💳 СБП №1</div>
                 <div class="method-desc">система быстрых платежей</div>
@@ -403,34 +156,34 @@ HTML = '''<!DOCTYPE html>
     
     <script>
         const ucProducts = {
-            "60": {"name": "60 UC", "price": 72, "oldPrice": 80},
-            "325": {"name": "325 UC", "price": 372, "oldPrice": 410},
-            "660": {"name": "660 UC", "price": 741, "oldPrice": 820},
-            "1800": {"name": "1800 UC", "price": 1876, "oldPrice": 2080},
-            "3850": {"name": "3850 UC", "price": 3738, "oldPrice": 4150},
-            "8100": {"name": "8100 UC", "price": 7228, "oldPrice": 8030}
+            "60": {"name": "60 UC", "price": 87, "oldPrice": 95},
+            "325": {"name": "325 UC", "price": 387, "oldPrice": 425},
+            "660": {"name": "660 UC", "price": 756, "oldPrice": 835},
+            "1800": {"name": "1800 UC", "price": 1891, "oldPrice": 2095},
+            "3850": {"name": "3850 UC", "price": 3753, "oldPrice": 4165},
+            "8100": {"name": "8100 UC", "price": 7243, "oldPrice": 8045}
         };
         
         const ppProducts = {
-            "10000": {"name": "10 000 ПП", "price": 137},
-            "20000": {"name": "20 000 ПП", "price": 274},
-            "30000": {"name": "30 000 ПП", "price": 409},
-            "40000": {"name": "40 000 ПП", "price": 546},
-            "50000": {"name": "50 000 ПП", "price": 681},
-            "60000": {"name": "60 000 ПП", "price": 818}
+            "10000": {"name": "10 000 ПП", "price": 152},
+            "20000": {"name": "20 000 ПП", "price": 289},
+            "30000": {"name": "30 000 ПП", "price": 424},
+            "40000": {"name": "40 000 ПП", "price": 561},
+            "50000": {"name": "50 000 ПП", "price": 696},
+            "60000": {"name": "60 000 ПП", "price": 833}
         };
         
         const primeProducts = {
-            "1m": {"name": "Prime (1 месяц)", "price": 110},
-            "3m": {"name": "Prime (3 месяца)", "price": 303},
-            "6m": {"name": "Prime (6 месяцев)", "price": 535},
-            "12m": {"name": "Prime (12 месяцев)", "price": 1012}
+            "1m": {"name": "Prime (1 месяц)", "price": 125},
+            "3m": {"name": "Prime (3 месяца)", "price": 318},
+            "6m": {"name": "Prime (6 месяцев)", "price": 550},
+            "12m": {"name": "Prime (12 месяцев)", "price": 1027}
         };
         
         const costumesProducts = {
-            "1": {"name": "X-КОСТЮМ Огненный демон", "price": 500},
-            "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 550},
-            "3": {"name": "X-КОСТЮМ Призрачный убийца", "price": 600}
+            "1": {"name": "X-КОСТЮМ Огненный демон", "price": 515},
+            "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 565},
+            "3": {"name": "X-КОСТЮМ Призрачный убийца", "price": 615}
         };
         
         let cart = {};
@@ -536,21 +289,12 @@ HTML = '''<!DOCTYPE html>
             const container = document.getElementById('cart-items');
             let total = 0;
             let html = '';
-            
             for (const [key, item] of Object.entries(cart)) {
                 const itemTotal = item.price * item.quantity;
                 total += itemTotal;
-                html += '<div class="cart-item">' +
-                    '<span>' + item.name + ' x' + item.quantity + '</span>' +
-                    '<span>' + itemTotal + ' ₽</span>' +
-                '</div>';
+                html += '<div class="cart-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + itemTotal + ' ₽</span></div>';
             }
-            
-            if (Object.keys(cart).length === 0) {
-                html = '<div style="text-align:center;color:#888;">Корзина пуста</div>';
-            }
-            
-            container.innerHTML = html;
+            container.innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
             document.getElementById('cart-total').innerHTML = 'Итого: ' + total + ' ₽';
         }
         
@@ -563,76 +307,40 @@ HTML = '''<!DOCTYPE html>
         
         function selectPayment(method) {
             selectedPayment = method;
-            document.querySelectorAll('.payment-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
+            document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
             document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('selected');
         }
         
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
-            
             document.getElementById('tab-uc').classList.add('hide');
             document.getElementById('tab-pp').classList.add('hide');
             document.getElementById('tab-prime').classList.add('hide');
             document.getElementById('tab-costumes').classList.add('hide');
-            
             document.getElementById(`tab-${tab}`).classList.remove('hide');
         }
         
         async function checkout() {
             const pubgId = document.getElementById('pubg_id').value;
-            
-            if (!pubgId) {
-                alert('❌ Введите PUBG ID получателя');
-                return;
-            }
-            
-            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) {
-                alert('❌ PUBG ID должен начинаться с 5 и содержать минимум 10 цифр');
-                return;
-            }
-            
-            if (Object.keys(cart).length === 0) {
-                alert('❌ Корзина пуста');
-                return;
-            }
-            
-            if (!selectedPayment) {
-                alert('❌ Выберите способ оплаты');
-                return;
-            }
+            if (!pubgId) { alert('❌ Введите PUBG ID получателя'); return; }
+            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) { alert('❌ PUBG ID должен начинаться с 5 и содержать минимум 10 цифр'); return; }
+            if (Object.keys(cart).length === 0) { alert('❌ Корзина пуста'); return; }
+            if (!selectedPayment) { alert('❌ Выберите способ оплаты'); return; }
             
             let total = 0;
-            for (const item of Object.values(cart)) {
-                total += item.price * item.quantity;
-            }
-            
-            const orderData = {
-                pubg_id: pubgId,
-                items: cart,
-                total: total,
-                payment_method: selectedPayment
-            };
+            for (const item of Object.values(cart)) total += item.price * item.quantity;
             
             try {
                 const response = await fetch('/create-order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(orderData)
+                    body: JSON.stringify({pubg_id: pubgId, items: cart, total: total, payment_method: selectedPayment})
                 });
-                
                 const data = await response.json();
-                
-                if (data.ok && data.order_id) {
-                    window.location.href = 'https://t.me/' + botUsername + '?start=order_' + data.order_id;
-                } else {
-                    alert('❌ Ошибка при создании заказа');
-                }
-            } catch (error) {
-                alert('❌ Ошибка сервера');
-            }
+                if (data.ok && data.order_id) window.location.href = 'https://t.me/' + botUsername + '?start=order_' + data.order_id;
+                else alert('❌ Ошибка при создании заказа');
+            } catch (error) { alert('❌ Ошибка сервера'); }
         }
         
         renderUCProducts();
