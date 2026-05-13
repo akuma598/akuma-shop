@@ -66,7 +66,6 @@ HTML = f'''<!DOCTYPE html>
         .footer a{{color:#ffcc00;text-decoration:none;}}
         .hide{{display:none;}}
         
-        /* Модальное окно */
         .modal {{
             display: none;
             position: fixed;
@@ -118,9 +117,20 @@ HTML = f'''<!DOCTYPE html>
             cursor: pointer;
             margin-top: 20px;
             font-size: 16px;
+            width: 100%;
         }}
         .modal-btn:hover {{
             opacity: 0.9;
+        }}
+        .copy-btn {{
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #ffcc00;
+            padding: 8px 20px;
+            border-radius: 10px;
+            color: #ffcc00;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
         }}
     </style>
 </head>
@@ -182,7 +192,6 @@ HTML = f'''<!DOCTYPE html>
         </div>
     </div>
     
-    <!-- Модальное окно -->
     <div id="orderModal" class="modal">
         <div class="modal-content">
             <h2>✅ ЗАКАЗ ПРИНЯТ!</h2>
@@ -190,8 +199,8 @@ HTML = f'''<!DOCTYPE html>
             <div class="order-id" id="modalOrderId">#0</div>
             <p>на сумму</p>
             <div class="total" id="modalTotal">0 ₽</div>
-            <p style="margin-top: 15px;">Перейдите в бота для оплаты</p>
-            <button class="modal-btn" onclick="goToBot()">📱 Перейти в бота</button>
+            <button class="copy-btn" onclick="copyOrderId()">📋 Скопировать номер заказа</button>
+            <button class="modal-btn" onclick="goToBot()">📱 Перейти в бота для оплаты</button>
         </div>
     </div>
     
@@ -354,15 +363,21 @@ HTML = f'''<!DOCTYPE html>
             document.getElementById(`tab-${{tab}}`).classList.remove('hide');
         }}
         
+        function copyOrderId() {{
+            const orderId = document.getElementById('modalOrderId').innerText;
+            navigator.clipboard.writeText(orderId);
+            alert('✅ Номер заказа скопирован: ' + orderId);
+        }}
+        
+        function goToBot() {{
+            window.location.href = 'https://t.me/' + botUsername;
+        }}
+        
         function showOrderModal(orderId, total) {{
             const modal = document.getElementById('orderModal');
             document.getElementById('modalOrderId').innerText = '#' + orderId;
             document.getElementById('modalTotal').innerText = total + ' ₽';
             modal.style.display = 'flex';
-        }}
-        
-        function goToBot() {{
-            window.location.href = 'https://t.me/' + botUsername;
         }}
         
         async function checkout() {{
@@ -418,6 +433,9 @@ def create_order():
     total = data.get('total')
     payment_method = data.get('payment_method')
     
+    print(f"📥 Получен запрос: pubg_id={pubg_id}, total={total}, payment={payment_method}")
+    print(f"📦 Товары: {items}")
+    
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
     
@@ -433,10 +451,11 @@ def create_order():
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
+    # Отправляем уведомление админу
     if BOT_TOKEN:
         try:
             items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
-            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 Товары:\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
             
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
@@ -444,8 +463,9 @@ def create_order():
                 "text": admin_text,
                 "parse_mode": "Markdown"
             }
-            requests.post(url, json=payload)
-        except:
-            pass
+            response = requests.post(url, json=payload)
+            print(f"✅ Уведомление админу отправлено: {response.status_code}")
+        except Exception as e:
+            print(f"❌ Ошибка отправки уведомления: {e}")
     
     return jsonify({'ok': True, 'order_id': order_id})
