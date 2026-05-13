@@ -13,12 +13,33 @@ ADMIN_ID = os.environ.get("ADMIN_ID", "8504217011")
 temp_orders = {}
 order_counter = 1
 
-# ID картинок
+# ID картинок (file_id)
 UC_IMAGE = "AgACAgIAAxkBAAEpH_RqBA2vvfInrAAB2cuLTUv2Y4DWKvUAAtcUaxv_-CFIWx3Af8eflaIBAAMCAAN4AAM7BA"
 PP_IMAGE = "AgACAgIAAxkBAAEpH_ZqBA3FZt5BaW8pOpj769e_C5y8xgAC2BRrG__4IUjQZtN17OtlEwEAAwIAA3gAAzsE"
 PRIME_IMAGE = "AgACAgIAAxkBAAEpH_hqBA3TAU1b0eAoyBWcGcf2-i0KDwAC2RRrG__4IUhl2i_0P5uuWwEAAwIAA3MAAzsE"
 COSTUME1_IMAGE = "AgACAgIAAxkBAAEpH_xqBA58yWfiNOx6mHN-I0qONkbMegAC3hRrG__4IUh-a9DIQamflgEAAwIAA3MAAzsE"
 COSTUME2_IMAGE = "AgACAgIAAxkBAAEpH_5qBA6UBNCsgo4zZ-DDSwadDs9iHgAC4RRrG__4IUj1Wbn6yP2wVgEAAwIAA3MAAzsE"
+
+# Функция для получения ссылки на картинку через Telegram Bot API
+def get_image_url(file_id):
+    if not BOT_TOKEN:
+        return ""
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
+        response = requests.get(url).json()
+        if response.get("ok"):
+            file_path = response["result"]["file_path"]
+            return f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+        return ""
+    except:
+        return ""
+
+# Получаем URL картинок
+UC_IMAGE_URL = get_image_url(UC_IMAGE)
+PP_IMAGE_URL = get_image_url(PP_IMAGE)
+PRIME_IMAGE_URL = get_image_url(PRIME_IMAGE)
+COSTUME1_IMAGE_URL = get_image_url(COSTUME1_IMAGE)
+COSTUME2_IMAGE_URL = get_image_url(COSTUME2_IMAGE)
 
 # Товары UC
 UC_PRODUCTS = {
@@ -50,52 +71,52 @@ PRIME_PRODUCTS = {
 
 # X-костюмы
 COSTUMES_PRODUCTS = {
-    "1": {"name": "X-КОСТЮМ Огненный демон", "price": 4500, "image": COSTUME1_IMAGE},
-    "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 4500, "image": COSTUME2_IMAGE}
+    "1": {"name": "X-КОСТЮМ Огненный демон", "price": 4500, "image": COSTUME1_IMAGE_URL},
+    "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 4500, "image": COSTUME2_IMAGE_URL}
 }
 
-HTML = '''<!DOCTYPE html>
+HTML = f'''<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>NeoN UC BOT 24/7</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;padding:20px;}
-        .container{max-width:600px;margin:0 auto;}
-        .header{text-align:center;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px;}
-        .header h1{font-size:24px;background:linear-gradient(135deg,#ffcc00,#ff9900);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-        .header p{color:#888;font-size:12px;margin-top:5px;}
-        .tabs{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}
-        .tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}
-        .tab.active{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}
-        .section-image{width:100%;border-radius:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);}
-        .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);}
-        .product-card:hover{background:rgba(255,255,255,0.1);border-color:#ffcc00;}
-        .product-info h3{font-size:18px;margin-bottom:5px;}
-        .product-info .price{color:#ffcc00;font-weight:bold;}
-        .product-actions{display:flex;align-items:center;}
-        .buy-btn,.select-btn{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a1a2e;font-weight:bold;cursor:pointer;font-size:14px;}
-        .buy-btn:hover,.select-btn:hover{opacity:0.9;}
-        .cart-section{background:rgba(0,0,0,0.5);border-radius:16px;padding:20px;margin-top:20px;border:1px solid rgba(255,204,0,0.3);}
-        .cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
-        .cart-header h3{font-size:18px;}
-        .clear-cart{background:rgba(255,0,0,0.2);border:1px solid #ff4444;color:#ff4444;padding:8px 15px;border-radius:10px;cursor:pointer;font-size:14px;}
-        .cart-item{display:flex;justify-content:space-between;margin-bottom:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);}
-        .cart-total{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.2);font-size:18px;font-weight:bold;text-align:right;color:#ffcc00;}
-        .pubg-section{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin:20px 0;}
-        .pubg-section input{width:100%;padding:14px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;font-size:16px;outline:none;}
-        .payment-methods{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0;}
-        .payment-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all 0.2s;}
-        .payment-btn:hover,.payment-btn.selected{border-color:#ffcc00;background:rgba(255,204,0,0.1);}
-        .payment-btn.selected{border-color:#ffcc00;background:rgba(255,204,0,0.2);}
-        .payment-btn .method-name{font-weight:bold;margin-bottom:5px;}
-        .payment-btn .method-desc{font-size:11px;color:#888;}
-        .checkout-btn{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a1a2e;font-size:18px;font-weight:bold;cursor:pointer;margin-top:20px;}
-        .footer{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}
-        .footer a{color:#ffcc00;text-decoration:none;}
-        .hide{display:none;}
+        *{{margin:0;padding:0;box-sizing:border-box;}}
+        body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;padding:20px;}}
+        .container{{max-width:600px;margin:0 auto;}}
+        .header{{text-align:center;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px;}}
+        .header h1{{font-size:24px;background:linear-gradient(135deg,#ffcc00,#ff9900);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}}
+        .header p{{color:#888;font-size:12px;margin-top:5px;}}
+        .tabs{{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}}
+        .tab{{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}}
+        .tab.active{{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}}
+        .section-image{{width:100%;border-radius:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);}}
+        .product-card{{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);}}
+        .product-card:hover{{background:rgba(255,255,255,0.1);border-color:#ffcc00;}}
+        .product-info h3{{font-size:18px;margin-bottom:5px;}}
+        .product-info .price{{color:#ffcc00;font-weight:bold;}}
+        .product-actions{{display:flex;align-items:center;}}
+        .buy-btn,.select-btn{{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a1a2e;font-weight:bold;cursor:pointer;font-size:14px;}}
+        .buy-btn:hover,.select-btn:hover{{opacity:0.9;}}
+        .cart-section{{background:rgba(0,0,0,0.5);border-radius:16px;padding:20px;margin-top:20px;border:1px solid rgba(255,204,0,0.3);}}
+        .cart-header{{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}}
+        .cart-header h3{{font-size:18px;}}
+        .clear-cart{{background:rgba(255,0,0,0.2);border:1px solid #ff4444;color:#ff4444;padding:8px 15px;border-radius:10px;cursor:pointer;font-size:14px;}}
+        .cart-item{{display:flex;justify-content:space-between;margin-bottom:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);}}
+        .cart-total{{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.2);font-size:18px;font-weight:bold;text-align:right;color:#ffcc00;}}
+        .pubg-section{{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin:20px 0;}}
+        .pubg-section input{{width:100%;padding:14px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;font-size:16px;outline:none;}}
+        .payment-methods{{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0;}}
+        .payment-btn{{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all 0.2s;}}
+        .payment-btn:hover,.payment-btn.selected{{border-color:#ffcc00;background:rgba(255,204,0,0.1);}}
+        .payment-btn.selected{{border-color:#ffcc00;background:rgba(255,204,0,0.2);}}
+        .payment-btn .method-name{{font-weight:bold;margin-bottom:5px;}}
+        .payment-btn .method-desc{{font-size:11px;color:#888;}}
+        .checkout-btn{{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a1a2e;font-size:18px;font-weight:bold;cursor:pointer;margin-top:20px;}}
+        .footer{{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}}
+        .footer a{{color:#ffcc00;text-decoration:none;}}
+        .hide{{display:none;}}
     </style>
 </head>
 <body>
@@ -113,16 +134,19 @@ HTML = '''<!DOCTYPE html>
         </div>
         
         <div id="tab-uc">
-            <img class="section-image" src="https://api.telegram.org/file/bot{BOT_TOKEN}/photos/file_0.jpg" alt="UC" style="display:none;">
+            <img class="section-image" src="{UC_IMAGE_URL}" alt="UC">
             <div id="uc-products"></div>
         </div>
         <div id="tab-pp" class="hide">
+            <img class="section-image" src="{PP_IMAGE_URL}" alt="Популярность">
             <div id="pp-products"></div>
         </div>
         <div id="tab-prime" class="hide">
+            <img class="section-image" src="{PRIME_IMAGE_URL}" alt="Подписки">
             <div id="prime-products"></div>
         </div>
         <div id="tab-costumes" class="hide">
+            <img class="section-image" src="{COSTUME1_IMAGE_URL}" alt="X-костюмы">
             <div id="costumes-products"></div>
         </div>
         
@@ -166,150 +190,126 @@ HTML = '''<!DOCTYPE html>
     </div>
     
     <script>
-        const ucProducts = {
-            "60": {"name": "60 UC", "price": 87},
-            "325": {"name": "325 UC", "price": 387},
-            "660": {"name": "660 UC", "price": 756},
-            "1800": {"name": "1800 UC", "price": 1891},
-            "3850": {"name": "3850 UC", "price": 3753},
-            "8100": {"name": "8100 UC", "price": 7243}
-        };
+        const ucProducts = {json.dumps(UC_PRODUCTS)};
+        const ppProducts = {json.dumps(PP_PRODUCTS)};
+        const primeProducts = {json.dumps(PRIME_PRODUCTS)};
+        const costumesProducts = {json.dumps({k: {"name": v["name"], "price": v["price"]} for k, v in COSTUMES_PRODUCTS.items()})};
+        const botUsername = "{BOT_USERNAME}";
         
-        const ppProducts = {
-            "10000": {"name": "10 000 ПП", "price": 152},
-            "20000": {"name": "20 000 ПП", "price": 289},
-            "30000": {"name": "30 000 ПП", "price": 424},
-            "40000": {"name": "40 000 ПП", "price": 561},
-            "50000": {"name": "50 000 ПП", "price": 696},
-            "60000": {"name": "60 000 ПП", "price": 833}
-        };
-        
-        const primeProducts = {
-            "1m": {"name": "Prime (1 месяц)", "price": 125},
-            "3m": {"name": "Prime (3 месяца)", "price": 318},
-            "6m": {"name": "Prime (6 месяцев)", "price": 550},
-            "12m": {"name": "Prime (12 месяцев)", "price": 1027}
-        };
-        
-        const costumesProducts = {
-            "1": {"name": "X-КОСТЮМ Огненный демон", "price": 4500},
-            "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 4500}
-        };
-        
-        let cart = {};
+        let cart = {{}};
         let selectedPayment = null;
         
-        function renderUCProducts() {
+        function renderUCProducts() {{
             const container = document.getElementById('uc-products');
             let html = '';
-            for (const [key, product] of Object.entries(ucProducts)) {
+            for (const [key, product] of Object.entries(ucProducts)) {{
                 html += '<div class="product-card">' +
                     '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions"><button class="buy-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Купить</button></div>' +
+                    '<div class="product-actions"><button class="buy-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Купить</button></div>' +
                 '</div>';
-            }
+            }}
             container.innerHTML = html;
-        }
+        }}
         
-        function renderPPProducts() {
+        function renderPPProducts() {{
             const container = document.getElementById('pp-products');
             let html = '';
-            for (const [key, product] of Object.entries(ppProducts)) {
+            for (const [key, product] of Object.entries(ppProducts)) {{
                 html += '<div class="product-card">' +
                     '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
-            }
+            }}
             container.innerHTML = html;
-        }
+        }}
         
-        function renderPrimeProducts() {
+        function renderPrimeProducts() {{
             const container = document.getElementById('prime-products');
             let html = '';
-            for (const [key, product] of Object.entries(primeProducts)) {
+            for (const [key, product] of Object.entries(primeProducts)) {{
                 html += '<div class="product-card">' +
                     '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
-            }
+            }}
             container.innerHTML = html;
-        }
+        }}
         
-        function renderCostumesProducts() {
+        function renderCostumesProducts() {{
             const container = document.getElementById('costumes-products');
             let html = '';
-            for (const [key, product] of Object.entries(costumesProducts)) {
+            for (const [key, product] of Object.entries(costumesProducts)) {{
                 html += '<div class="product-card">' +
                     '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
-            }
+            }}
             container.innerHTML = html;
-        }
+        }}
         
-        function addToCart(key, name, price) {
-            if (!cart[key]) cart[key] = {name: name, price: price, quantity: 0};
+        function addToCart(key, name, price) {{
+            if (!cart[key]) cart[key] = {{name: name, price: price, quantity: 0}};
             cart[key].quantity++;
             updateCartDisplay();
             alert('✅ ' + name + ' добавлен в корзину');
-        }
+        }}
         
-        function updateCartDisplay() {
+        function updateCartDisplay() {{
             const container = document.getElementById('cart-items');
             let total = 0;
             let html = '';
-            for (const [key, item] of Object.entries(cart)) {
+            for (const [key, item] of Object.entries(cart)) {{
                 const itemTotal = item.price * item.quantity;
                 total += itemTotal;
                 html += '<div class="cart-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + itemTotal + ' ₽</span></div>';
-            }
+            }}
             container.innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
             document.getElementById('cart-total').innerHTML = 'Итого: ' + total + ' ₽';
-        }
+        }}
         
-        function clearCart() {
-            cart = {};
+        function clearCart() {{
+            cart = {{}};
             updateCartDisplay();
             alert('🗑 Корзина очищена');
-        }
+        }}
         
-        function selectPayment(method) {
+        function selectPayment(method) {{
             selectedPayment = method;
             document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
-            document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('selected');
-        }
+            document.querySelector(`.payment-btn[data-method="${{method}}"]`).classList.add('selected');
+        }}
         
-        function switchTab(tab) {
+        function switchTab(tab) {{
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${{tab}}')"]`).classList.add('active');
             document.getElementById('tab-uc').classList.add('hide');
             document.getElementById('tab-pp').classList.add('hide');
             document.getElementById('tab-prime').classList.add('hide');
             document.getElementById('tab-costumes').classList.add('hide');
-            document.getElementById(`tab-${tab}`).classList.remove('hide');
-        }
+            document.getElementById(`tab-${{tab}}`).classList.remove('hide');
+        }}
         
-        async function checkout() {
+        async function checkout() {{
             const pubgId = document.getElementById('pubg_id').value;
-            if (!pubgId) { alert('❌ Введите PUBG ID получателя'); return; }
-            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) { alert('❌ PUBG ID должен начинаться с 5 и содержать минимум 10 цифр'); return; }
-            if (Object.keys(cart).length === 0) { alert('❌ Корзина пуста'); return; }
-            if (!selectedPayment) { alert('❌ Выберите способ оплаты'); return; }
+            if (!pubgId) {{ alert('❌ Введите PUBG ID получателя'); return; }}
+            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) {{ alert('❌ PUBG ID должен начинаться с 5 и содержать минимум 10 цифр'); return; }}
+            if (Object.keys(cart).length === 0) {{ alert('❌ Корзина пуста'); return; }}
+            if (!selectedPayment) {{ alert('❌ Выберите способ оплаты'); return; }}
             
             let total = 0;
             for (const item of Object.values(cart)) total += item.price * item.quantity;
             
-            try {
-                const response = await fetch('/create-order', {
+            try {{
+                const response = await fetch('/create-order', {{
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({pubg_id: pubgId, items: cart, total: total, payment_method: selectedPayment})
-                });
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify({{pubg_id: pubgId, items: cart, total: total, payment_method: selectedPayment}})
+                }});
                 const data = await response.json();
                 if (data.ok && data.order_id) window.location.href = 'https://t.me/' + botUsername + '?start=order_' + data.order_id;
                 else alert('❌ Ошибка при создании заказа');
-            } catch (error) { alert('❌ Ошибка сервера'); }
-        }
+            }} catch (error) {{ alert('❌ Ошибка сервера'); }}
+        }}
         
         renderUCProducts();
         renderPPProducts();
