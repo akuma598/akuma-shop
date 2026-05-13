@@ -223,17 +223,18 @@ def create_order():
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    # Отправляем уведомление админу (опционально)
+    # Отправляем уведомление админу в Telegram
     if BOT_TOKEN:
         try:
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
                 "chat_id": ADMIN_ID,
-                "text": f"🆕 **ЗАКАЗ С САЙТА**\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 {amount} UC\n💰 {price}₽",
+                "text": f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 UC: {amount}\n💰 Сумма: {price}₽\n\n⏰ {datetime.now().strftime('%H:%M:%S')}",
                 "parse_mode": "Markdown"
             }
             requests.post(url, json=payload)
-        except:
-            pass
+            print(f"✅ Уведомление отправлено админу")
+        except Exception as e:
+            print(f"❌ Ошибка отправки: {e}")
     
     return jsonify({'ok': True, 'order_id': order_id})
