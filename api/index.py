@@ -18,7 +18,7 @@ HTML = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PUBG Mobile Shop</title>
+    <title>Akuma UC BOT 24/7</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +28,7 @@ HTML = '''<!DOCTYPE html>
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             min-height: 100vh;
             color: #fff;
             padding: 20px;
@@ -60,7 +60,7 @@ HTML = '''<!DOCTYPE html>
             margin-top: 5px;
         }
         
-        .nav {
+        .tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
@@ -69,7 +69,7 @@ HTML = '''<!DOCTYPE html>
             border-radius: 12px;
         }
         
-        .nav-item {
+        .tab {
             flex: 1;
             text-align: center;
             padding: 12px;
@@ -80,45 +80,20 @@ HTML = '''<!DOCTYPE html>
             font-weight: bold;
         }
         
-        .nav-item.active {
+        .tab.active {
             background: linear-gradient(135deg, #ffcc00, #ff9900);
             color: #1a1a2e;
-        }
-        
-        .banner {
-            background: linear-gradient(135deg, #ffcc00, #ff9900);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .banner h2 {
-            color: #1a1a2e;
-            margin-bottom: 5px;
-        }
-        
-        .banner p {
-            color: #1a1a2e;
-            font-size: 12px;
-            opacity: 0.8;
-        }
-        
-        .products {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 30px;
         }
         
         .product-card {
             background: rgba(255,255,255,0.05);
             border-radius: 16px;
             padding: 16px;
-            text-align: center;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.2s;
-            cursor: pointer;
         }
         
         .product-card:hover {
@@ -126,35 +101,59 @@ HTML = '''<!DOCTYPE html>
             border-color: #ffcc00;
         }
         
-        .product-image {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-        }
-        
-        .product-name {
+        .product-info h3 {
             font-size: 18px;
-            font-weight: bold;
             margin-bottom: 5px;
         }
         
-        .product-price {
+        .product-info .price {
             color: #ffcc00;
             font-weight: bold;
-            font-size: 16px;
         }
         
-        .product-old-price {
-            color: #888;
-            font-size: 12px;
-            text-decoration: line-through;
-            margin-left: 8px;
+        .product-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quantity-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .quantity-btn:hover {
+            background: #ffcc00;
+            color: #1a1a2e;
+        }
+        
+        .quantity {
+            font-size: 16px;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .select-btn {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 10px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
         }
         
         .cart-section {
@@ -170,6 +169,20 @@ HTML = '''<!DOCTYPE html>
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+        }
+        
+        .cart-header h3 {
+            font-size: 18px;
+        }
+        
+        .clear-cart {
+            background: rgba(255,0,0,0.2);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
         }
         
         .cart-item {
@@ -190,17 +203,46 @@ HTML = '''<!DOCTYPE html>
             color: #ffcc00;
         }
         
-        .clear-cart {
-            background: rgba(255,0,0,0.2);
-            border: 1px solid #ff4444;
-            color: #ff4444;
-            padding: 8px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
+        .pubg-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
         }
         
-        .buy-code-btn {
+        .pubg-section input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .payment-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .payment-btn.selected {
+            border-color: #ffcc00;
+            background: rgba(255,204,0,0.2);
+        }
+        
+        .checkout-btn {
             background: linear-gradient(135deg, #ffcc00, #ff9900);
             border: none;
             padding: 16px;
@@ -211,24 +253,6 @@ HTML = '''<!DOCTYPE html>
             font-weight: bold;
             cursor: pointer;
             margin-top: 20px;
-        }
-        
-        .pubg-input {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .pubg-input input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            background: rgba(0,0,0,0.3);
-            color: #fff;
-            font-size: 16px;
-            outline: none;
         }
         
         .footer {
@@ -275,7 +299,6 @@ HTML = '''<!DOCTYPE html>
         .modal-content h2 {
             color: #ffcc00;
             margin-bottom: 15px;
-            font-size: 24px;
         }
         
         .modal-content .order-id {
@@ -300,56 +323,28 @@ HTML = '''<!DOCTYPE html>
             font-weight: bold;
             cursor: pointer;
             margin-top: 20px;
-            font-size: 16px;
             width: 100%;
-        }
-        
-        .copy-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #ffcc00;
-            padding: 8px 20px;
-            border-radius: 10px;
-            color: #ffcc00;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-            width: 100%;
-        }
-        
-        @media (max-width: 480px) {
-            .products {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 PUBG Mobile Shop</h1>
-            <p>Пополнение по ID | Мгновенная выдача</p>
+            <h1>🔥 Akuma UC BOT 24/7</h1>
+            <p>Быстрая покупка UC | 24/7 | Мгновенная выдача</p>
         </div>
         
-        <div class="nav">
-            <div class="nav-item active" onclick="switchTab('uc')">UC</div>
-            <div class="nav-item" onclick="switchTab('pp')">ПП</div>
-            <div class="nav-item" onclick="switchTab('skins')">Скины</div>
-            <div class="nav-item" onclick="switchTab('subscriptions')">Подписки</div>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('uc')">UC</div>
+            <div class="tab" onclick="switchTab('pp')">Популярность</div>
+            <div class="tab" onclick="switchTab('prime')">Подписки</div>
+            <div class="tab" onclick="switchTab('costumes')">X-костюмы</div>
         </div>
         
-        <div class="banner">
-            <h2>🎮 Пополнение по ID</h2>
-            <p>UC будут зачислены на указанный вами ID автоматически в течение 5 минут!</p>
-        </div>
-        
-        <div id="tab-uc"><div class="products" id="uc-products"></div></div>
-        <div id="tab-pp" class="hide"><div class="products" id="pp-products"></div></div>
-        <div id="tab-skins" class="hide"><div class="products" id="skins-products"></div></div>
-        <div id="tab-subscriptions" class="hide"><div class="products" id="subscriptions-products"></div></div>
-        
-        <div class="pubg-input">
-            <input type="number" id="pubg_id" placeholder="Введите PUBG ID получателя (начинается с 5)">
-        </div>
+        <div id="tab-uc"><div id="uc-products"></div></div>
+        <div id="tab-pp" class="hide"><div id="pp-products"></div></div>
+        <div id="tab-prime" class="hide"><div id="prime-products"></div></div>
+        <div id="tab-costumes" class="hide"><div id="costumes-products"></div></div>
         
         <div class="cart-section">
             <div class="cart-header">
@@ -360,7 +355,18 @@ HTML = '''<!DOCTYPE html>
             <div id="cart-total" class="cart-total">Итого: 0 ₽</div>
         </div>
         
-        <button class="buy-code-btn" onclick="createOrderFromCart()">💳 Оформить заказ</button>
+        <div class="pubg-section">
+            <input type="number" id="pubg_id" placeholder="Введите PUBG ID получателя (начинается с 5)">
+        </div>
+        
+        <div class="payment-methods">
+            <div class="payment-btn" onclick="selectPayment('sbp1')" data-method="sbp1">💳 СБП №1</div>
+            <div class="payment-btn" onclick="selectPayment('sbp2')" data-method="sbp2">💳 СБП №2</div>
+            <div class="payment-btn" onclick="selectPayment('card1')" data-method="card1">💳 Карта №1</div>
+            <div class="payment-btn" onclick="selectPayment('card2')" data-method="card2">💳 Карта №2</div>
+        </div>
+        
+        <button class="checkout-btn" onclick="checkout()">Купить</button>
         
         <div class="footer">
             <p>Вопросы: <a href="https://t.me/aakumma">@aakumma</a></p>
@@ -373,91 +379,114 @@ HTML = '''<!DOCTYPE html>
             <div class="order-id" id="modalOrderId">#0</div>
             <p>на сумму</p>
             <div class="total" id="modalTotal">0 ₽</div>
-            <button class="copy-btn" onclick="copyOrderId()">📋 Скопировать номер заказа</button>
             <button class="modal-btn" onclick="goToBot()">📱 Перейти в бота для оплаты</button>
-            <p style="font-size: 11px; color: #b87dff; margin-top: 15px;">
-                💡 Если бот не открылся — нажмите три точки (⋮) → «Открыть в браузере»
-            </p>
+            <p style="font-size: 11px; margin-top: 15px;">Если бот не открылся — нажмите три точки (⋮) → «Открыть в браузере»</p>
         </div>
     </div>
     
     <script>
         // UC ТОВАРЫ
         const ucProducts = {
-            "60": {"name": "60 UC", "price": 71, "oldPrice": 80, "icon": "🎮"},
-            "120": {"name": "120 UC", "price": 141, "oldPrice": 162, "icon": "🎮"},
-            "180": {"name": "180 UC", "price": 211, "oldPrice": 243, "icon": "🎮"},
-            "240": {"name": "240 UC", "price": 281, "oldPrice": 324, "icon": "🎮"},
-            "325": {"name": "325 UC", "price": 349, "oldPrice": 405, "icon": "🎮"},
-            "385": {"name": "385 UC", "price": 419, "oldPrice": 485, "icon": "🎮"},
-            "445": {"name": "445 UC", "price": 482, "oldPrice": 560, "icon": "🎮"},
-            "660": {"name": "660 UC", "price": 708, "oldPrice": 820, "icon": "🎮"},
-            "720": {"name": "720 UC", "price": 771, "oldPrice": 895, "icon": "🎮"},
-            "985": {"name": "985 UC", "price": 1049, "oldPrice": 1220, "icon": "🎮"},
-            "1320": {"name": "1320 UC", "price": 1401, "oldPrice": 1630, "icon": "🎮"},
-            "1800": {"name": "1800 UC", "price": 1891, "oldPrice": 2200, "icon": "🎮"}
+            "60": {"name": "60 UC", "price": 87},
+            "120": {"name": "120 UC", "price": 152},
+            "180": {"name": "180 UC", "price": 223},
+            "240": {"name": "240 UC", "price": 293},
+            "325": {"name": "325 UC", "price": 387},
+            "385": {"name": "385 UC", "price": 434},
+            "445": {"name": "445 UC", "price": 482},
+            "660": {"name": "660 UC", "price": 756},
+            "720": {"name": "720 UC", "price": 771},
+            "985": {"name": "985 UC", "price": 1049},
+            "1320": {"name": "1320 UC", "price": 1401},
+            "1800": {"name": "1800 UC", "price": 1891}
         };
         
         // ПП ТОВАРЫ
         const ppProducts = {
-            "10000": {"name": "10 000 ПП", "price": 152, "icon": "👑"},
-            "20000": {"name": "20 000 ПП", "price": 289, "icon": "👑"},
-            "30000": {"name": "30 000 ПП", "price": 424, "icon": "👑"},
-            "40000": {"name": "40 000 ПП", "price": 561, "icon": "👑"},
-            "50000": {"name": "50 000 ПП", "price": 696, "icon": "👑"},
-            "60000": {"name": "60 000 ПП", "price": 833, "icon": "👑"}
-        };
-        
-        // СКИНЫ
-        const skinsProducts = {
-            "1": {"name": "❄️ Frozen Dragon", "price": 1500, "icon": "🐉"},
-            "2": {"name": "🔥 Phoenix Wings", "price": 1800, "icon": "🔥"},
-            "3": {"name": "🗡️ Shadow Blade", "price": 1200, "icon": "🗡️"}
+            "10000": {"name": "10 000 ПП", "price": 152},
+            "20000": {"name": "20 000 ПП", "price": 289},
+            "30000": {"name": "30 000 ПП", "price": 424},
+            "40000": {"name": "40 000 ПП", "price": 561},
+            "50000": {"name": "50 000 ПП", "price": 696},
+            "60000": {"name": "60 000 ПП", "price": 833}
         };
         
         // ПОДПИСКИ
-        const subscriptionsProducts = {
-            "1m": {"name": "Prime (1 месяц)", "price": 125, "icon": "⭐"},
-            "3m": {"name": "Prime (3 месяца)", "price": 318, "icon": "⭐⭐"},
-            "6m": {"name": "Prime (6 месяцев)", "price": 550, "icon": "⭐⭐⭐"},
-            "12m": {"name": "Prime (12 месяцев)", "price": 1027, "icon": "⭐⭐⭐⭐"}
+        const primeProducts = {
+            "1m": {"name": "Prime (1 месяц)", "price": 125},
+            "3m": {"name": "Prime (3 месяца)", "price": 318},
+            "6m": {"name": "Prime (6 месяцев)", "price": 550},
+            "12m": {"name": "Prime (12 месяцев)", "price": 1027}
+        };
+        
+        // X-КОСТЮМЫ
+        const costumesProducts = {
+            "1": {"name": "🐦‍⬛ Ворон", "price": 4500},
+            "2": {"name": "🔥 Феникс", "price": 4500}
         };
         
         const botUsername = "akuma_ucbot";
         
         let cart = JSON.parse(localStorage.getItem('cart')) || {};
-        let currentTab = 'uc';
+        let selectedPayment = localStorage.getItem('selectedPayment') || null;
         
-        function renderProducts(containerId, products) {
-            const container = document.getElementById(containerId);
+        function renderUCProducts() {
+            const container = document.getElementById('uc-products');
             let html = '';
-            for (const [key, product] of Object.entries(products)) {
-                const quantity = cart[key] ? cart[key].quantity : 0;
-                html += `
-                    <div class="product-card">
-                        <div class="product-image">${product.icon}</div>
-                        <div class="product-name">${product.name}</div>
-                        <div>
-                            <span class="product-price">${product.price} ₽</span>
-                            ${product.oldPrice ? `<span class="product-old-price">${product.oldPrice} ₽</span>` : ''}
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;">
-                            <button class="clear-cart" style="padding: 5px 10px;" onclick="updateQuantity('${key}', -1)">-</button>
-                            <span style="min-width: 30px; text-align: center;">${quantity}</span>
-                            <button class="clear-cart" style="padding: 5px 10px; background: rgba(255,204,0,0.2); border-color: #ffcc00; color: #ffcc00;" onclick="updateQuantity('${key}', 1)">+</button>
-                        </div>
-                    </div>
-                `;
+            for (const [key, product] of Object.entries(ucProducts)) {
+                const qty = cart[key] ? cart[key].quantity : 0;
+                html += '<div class="product-card">' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions">' +
+                        '<div class="quantity-control">' +
+                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', -1)">-</button>' +
+                            '<span class="quantity">' + qty + '</span>' +
+                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', 1)">+</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+        
+        function renderPPProducts() {
+            const container = document.getElementById('pp-products');
+            let html = '';
+            for (const [key, product] of Object.entries(ppProducts)) {
+                html += '<div class="product-card">' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+        
+        function renderPrimeProducts() {
+            const container = document.getElementById('prime-products');
+            let html = '';
+            for (const [key, product] of Object.entries(primeProducts)) {
+                html += '<div class="product-card">' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+        
+        function renderCostumesProducts() {
+            const container = document.getElementById('costumes-products');
+            let html = '';
+            for (const [key, product] of Object.entries(costumesProducts)) {
+                html += '<div class="product-card">' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
+                '</div>';
             }
             container.innerHTML = html;
         }
         
         function updateQuantity(key, delta) {
-            if (!cart[key]) {
-                const product = getProductByKey(key);
-                if (!product) return;
-                cart[key] = {name: product.name, price: product.price, quantity: 0};
-            }
+            if (!cart[key]) cart[key] = {name: ucProducts[key].name, price: ucProducts[key].price, quantity: 0};
             let newQty = cart[key].quantity + delta;
             if (newQty <= 0) {
                 delete cart[key];
@@ -466,12 +495,7 @@ HTML = '''<!DOCTYPE html>
             }
             saveCart();
             updateCartDisplay();
-            renderCurrentTab();
-        }
-        
-        function getProductByKey(key) {
-            const allProducts = {...ucProducts, ...ppProducts, ...skinsProducts, ...subscriptionsProducts};
-            return allProducts[key];
+            renderUCProducts();
         }
         
         function addToCart(key, name, price) {
@@ -479,7 +503,7 @@ HTML = '''<!DOCTYPE html>
             cart[key].quantity++;
             saveCart();
             updateCartDisplay();
-            renderCurrentTab();
+            alert('✅ ' + name + ' добавлен в корзину');
         }
         
         function updateCartDisplay() {
@@ -489,49 +513,44 @@ HTML = '''<!DOCTYPE html>
             for (const [key, item] of Object.entries(cart)) {
                 const itemTotal = item.price * item.quantity;
                 total += itemTotal;
-                html += `<div class="cart-item"><span>${item.name} x${item.quantity}</span><span>${itemTotal} ₽</span></div>`;
+                html += '<div class="cart-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + itemTotal + ' ₽</span></div>';
             }
             container.innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
             document.getElementById('cart-total').innerHTML = 'Итого: ' + total + ' ₽';
-            return total;
         }
         
         function clearCart() {
             cart = {};
             saveCart();
             updateCartDisplay();
-            renderCurrentTab();
+            renderUCProducts();
             alert('🗑 Корзина очищена');
         }
         
         function saveCart() {
             localStorage.setItem('cart', JSON.stringify(cart));
+            if (selectedPayment) localStorage.setItem('selectedPayment', selectedPayment);
         }
         
-        function renderCurrentTab() {
-            if (currentTab === 'uc') renderProducts('uc-products', ucProducts);
-            else if (currentTab === 'pp') renderProducts('pp-products', ppProducts);
-            else if (currentTab === 'skins') renderProducts('skins-products', skinsProducts);
-            else if (currentTab === 'subscriptions') renderProducts('subscriptions-products', subscriptionsProducts);
+        function selectPayment(method) {
+            selectedPayment = method;
+            saveCart();
+            document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('selected');
         }
         
         function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`.nav-item[onclick="switchTab('${tab}')"]`).classList.add('active');
-            
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
             document.getElementById('tab-uc').classList.add('hide');
             document.getElementById('tab-pp').classList.add('hide');
-            document.getElementById('tab-skins').classList.add('hide');
-            document.getElementById('tab-subscriptions').classList.add('hide');
+            document.getElementById('tab-prime').classList.add('hide');
+            document.getElementById('tab-costumes').classList.add('hide');
             document.getElementById(`tab-${tab}`).classList.remove('hide');
-            renderCurrentTab();
-        }
-        
-        function copyOrderId() {
-            const orderId = document.getElementById('modalOrderId').innerText;
-            navigator.clipboard.writeText(orderId);
-            alert('✅ Номер заказа скопирован: ' + orderId);
+            if (tab === 'uc') renderUCProducts();
+            if (tab === 'pp') renderPPProducts();
+            if (tab === 'prime') renderPrimeProducts();
+            if (tab === 'costumes') renderCostumesProducts();
         }
         
         function goToBot() {
@@ -545,21 +564,13 @@ HTML = '''<!DOCTYPE html>
             modal.style.display = 'flex';
         }
         
-        async function createOrderFromCart() {
+        async function checkout() {
             const pubgId = document.getElementById('pubg_id').value;
             
-            if (!pubgId) {
-                alert('❌ Введите PUBG ID получателя');
-                return;
-            }
-            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) {
-                alert('❌ PUBG ID должен начинаться с 5 и содержать минимум 10 цифр');
-                return;
-            }
-            if (Object.keys(cart).length === 0) {
-                alert('❌ Корзина пуста');
-                return;
-            }
+            if (!pubgId) { alert('❌ Введите PUBG ID'); return; }
+            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) { alert('❌ PUBG ID должен начинаться с 5 (10+ цифр)'); return; }
+            if (Object.keys(cart).length === 0) { alert('❌ Корзина пуста'); return; }
+            if (!selectedPayment) { alert('❌ Выберите способ оплаты'); return; }
             
             let total = 0;
             for (const item of Object.values(cart)) total += item.price * item.quantity;
@@ -568,7 +579,7 @@ HTML = '''<!DOCTYPE html>
                 const response = await fetch('/create-order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({pubg_id: pubgId, items: cart, total: total})
+                    body: JSON.stringify({pubg_id: pubgId, items: cart, total: total, payment_method: selectedPayment})
                 });
                 const data = await response.json();
                 if (data.ok && data.order_id) {
@@ -576,7 +587,9 @@ HTML = '''<!DOCTYPE html>
                     cart = {};
                     saveCart();
                     updateCartDisplay();
-                    renderCurrentTab();
+                    renderUCProducts();
+                    selectedPayment = null;
+                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
                 } else {
                     alert('❌ Ошибка при создании заказа');
                 }
@@ -585,7 +598,15 @@ HTML = '''<!DOCTYPE html>
             }
         }
         
-        renderCurrentTab();
+        if (selectedPayment) {
+            const btn = document.querySelector(`.payment-btn[data-method="${selectedPayment}"]`);
+            if (btn) btn.classList.add('selected');
+        }
+        
+        renderUCProducts();
+        renderPPProducts();
+        renderPrimeProducts();
+        renderCostumesProducts();
         updateCartDisplay();
     </script>
 </body>
@@ -602,9 +623,9 @@ def create_order():
     pubg_id = data.get('pubg_id')
     items = data.get('items')
     total = data.get('total')
+    payment_method = data.get('payment_method')
     
-    print(f"📥 НОВЫЙ ЗАКАЗ: pubg_id={pubg_id}, total={total}")
-    print(f"📦 ТОВАРЫ: {items}")
+    print(f"📥 НОВЫЙ ЗАКАЗ: pubg_id={pubg_id}, total={total}, payment={payment_method}")
     
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
@@ -616,15 +637,16 @@ def create_order():
         'pubg_id': pubg_id,
         'items': items,
         'total': total,
+        'payment_method': payment_method,
         'status': 'pending',
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    # Отправляем уведомление админу
+    # ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНУ
     if BOT_TOKEN:
         try:
             items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
-            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**"
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
             
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
@@ -635,7 +657,7 @@ def create_order():
             response = requests.post(url, json=payload)
             print(f"✅ Уведомление админу отправлено: {response.status_code}")
         except Exception as e:
-            print(f"❌ Ошибка отправки уведомления: {e}")
+            print(f"❌ Ошибка отправки: {e}")
     else:
         print("❌ BOT_TOKEN не установлен!")
     
