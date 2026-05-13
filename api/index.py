@@ -119,6 +119,9 @@ HTML = '''<!DOCTYPE html>
     </div>
     
     <script>
+        // ===== ВСЕ ТОВАРЫ (ПАКИ) =====
+        
+        // UC ТОВАРЫ (15 штук)
         const ucProducts = {
             "60": {"name": "60 UC", "price": 87},
             "120": {"name": "120 UC", "price": 152},
@@ -131,9 +134,13 @@ HTML = '''<!DOCTYPE html>
             "720": {"name": "720 UC", "price": 771},
             "985": {"name": "985 UC", "price": 1049},
             "1320": {"name": "1320 UC", "price": 1401},
-            "1800": {"name": "1800 UC", "price": 1891}
+            "1800": {"name": "1800 UC", "price": 1891},
+            "3850": {"name": "3850 UC", "price": 3753},
+            "8100": {"name": "8100 UC", "price": 7243},
+            "9900": {"name": "9900 UC", "price": 9790}
         };
         
+        // ПП ТОВАРЫ (6 штук)
         const ppProducts = {
             "10000": {"name": "10 000 ПП", "price": 152},
             "20000": {"name": "20 000 ПП", "price": 289},
@@ -143,6 +150,7 @@ HTML = '''<!DOCTYPE html>
             "60000": {"name": "60 000 ПП", "price": 833}
         };
         
+        // ПОДПИСКИ PRIME (4 штуки)
         const primeProducts = {
             "1m": {"name": "Prime (1 месяц)", "price": 125},
             "3m": {"name": "Prime (3 месяца)", "price": 318},
@@ -150,6 +158,7 @@ HTML = '''<!DOCTYPE html>
             "12m": {"name": "Prime (12 месяцев)", "price": 1027}
         };
         
+        // X-КОСТЮМЫ (2 штуки)
         const costumesProducts = {
             "1": {"name": "🐦‍⬛ Ворон", "price": 4500},
             "2": {"name": "🔥 Феникс", "price": 4500}
@@ -160,6 +169,7 @@ HTML = '''<!DOCTYPE html>
         
         let cart = JSON.parse(localStorage.getItem('cart')) || {};
         let selectedPayment = localStorage.getItem('selectedPayment') || null;
+        let currentTab = 'uc';
         
         function renderUCProducts() {
             const container = document.getElementById('uc-products');
@@ -248,7 +258,6 @@ HTML = '''<!DOCTYPE html>
             }
             container.innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
             document.getElementById('cart-total').innerHTML = 'Итого: ' + total + ' ₽';
-            return total;
         }
         
         function clearCart() {
@@ -270,8 +279,6 @@ HTML = '''<!DOCTYPE html>
             document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
             document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('selected');
         }
-        
-        let currentTab = 'uc';
         
         function switchTab(tab) {
             currentTab = tab;
@@ -347,7 +354,6 @@ HTML = '''<!DOCTYPE html>
             if (btn) btn.classList.add('selected');
         }
         
-        // Кнопка перехода в бота
         document.getElementById('goToBotBtn').onclick = function() {
             window.location.href = botLink;
         };
@@ -369,7 +375,6 @@ def create_order():
     payment_method = data.get('payment_method')
     
     print(f"📥 НОВЫЙ ЗАКАЗ: pubg_id={pubg_id}, total={total}, payment={payment_method}")
-    print(f"📦 ТОВАРЫ: {items}")
     
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
@@ -386,11 +391,10 @@ def create_order():
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    # ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНУ
     if BOT_TOKEN:
         try:
             items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
-            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
             
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
@@ -398,11 +402,9 @@ def create_order():
                 "text": admin_text,
                 "parse_mode": "Markdown"
             }
-            response = requests.post(url, json=payload)
-            print(f"✅ Уведомление админу отправлено: {response.status_code}")
+            requests.post(url, json=payload)
+            print(f"✅ Уведомление админу отправлено")
         except Exception as e:
-            print(f"❌ Ошибка отправки: {e}")
-    else:
-        print("❌ BOT_TOKEN не установлен!")
+            print(f"❌ Ошибка: {e}")
     
     return jsonify({'ok': True, 'order_id': order_id})
