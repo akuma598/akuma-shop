@@ -54,6 +54,9 @@ HTML = '''<!DOCTYPE html>
         .card-details h3{color:#ffcc00;margin-bottom:15px;}
         .card-number{font-size:22px;font-weight:bold;letter-spacing:2px;background:#1a1a2e;padding:12px;border-radius:12px;font-family:monospace;}
         .pay-button{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a1a2e;font-size:18px;font-weight:bold;cursor:pointer;margin-top:20px;}
+        .info-box{background:rgba(255,204,0,0.1);padding:15px;border-radius:12px;margin:15px 0;text-align:left;border-left:3px solid #ffcc00;}
+        .info-box p{font-size:14px;margin:8px 0;line-height:1.4;}
+        .info-box strong{color:#ffcc00;}
         .footer{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}
         .footer a{color:#ffcc00;text-decoration:none;}
         .hidden{display:none;}
@@ -80,11 +83,22 @@ HTML = '''<!DOCTYPE html>
         <div id="payment-info" class="hidden">
             <div class="card-details">
                 <h3>💳 РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</h3>
-                <p>Переведите точную сумму на карту:</p>
+                <p>1️⃣ Переведите точную сумму на карту:</p>
                 <div class="card-number">**** **** **** 1234</div>
-                <p style="margin-top: 15px;">Получатель: <strong>АКУМА</strong></p>
-                <p style="font-size: 12px; color: #888; margin-top: 15px;">Сумма к оплате: <strong id="pay-amount">0</strong> ₽</p>
+                <p style="margin-top: 10px;">Получатель: <strong>АКУМА</strong></p>
+                <p style="font-size: 12px; color: #888; margin-top: 15px;">💰 Сумма к оплате: <strong id="pay-amount">0</strong> ₽</p>
+                
+                <div class="info-box">
+                    <p>📌 <strong>ПОСЛЕ ПЕРЕВОДА:</strong></p>
+                    <p>2️⃣ <strong>Нажмите кнопку «✅ Я ОПЛАТИЛ»</strong> → вас автоматически перекинет в Telegram бота</p>
+                    <p>3️⃣ <strong>В боте нажмите «Отправить»</strong> — заказ будет принят</p>
+                </div>
+                
                 <button class="pay-button" onclick="confirmPayment()">✅ Я ОПЛАТИЛ</button>
+                
+                <p style="font-size: 12px; color: #888; margin-top: 15px;">
+                    ⚠️ Если бот не открылся автоматически — <a href="https://t.me/akuma_ucbot" target="_blank" style="color:#ffcc00;">нажмите сюда</a>
+                </p>
             </div>
             <div class="back-link">
                 <a href="#" onclick="backToCatalog(); return false;">◀️ Назад к выбору товара</a>
@@ -223,18 +237,17 @@ def create_order():
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    # Отправляем уведомление админу в Telegram
+    # Отправляем уведомление админу
     if BOT_TOKEN:
         try:
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
                 "chat_id": ADMIN_ID,
-                "text": f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 UC: {amount}\n💰 Сумма: {price}₽\n\n⏰ {datetime.now().strftime('%H:%M:%S')}",
+                "text": f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 UC: {amount}\n💰 Сумма: {price}₽",
                 "parse_mode": "Markdown"
             }
             requests.post(url, json=payload)
-            print(f"✅ Уведомление отправлено админу")
-        except Exception as e:
-            print(f"❌ Ошибка отправки: {e}")
+        except:
+            pass
     
     return jsonify({'ok': True, 'order_id': order_id})
