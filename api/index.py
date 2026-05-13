@@ -11,14 +11,21 @@ HTML = '''<!DOCTYPE html>
     <title>Akuma UC Shop</title>
     <style>
         body{font-family:Arial;background:#1a1a2e;color:#fff;padding:20px;}
-        .product{background:rgba(255,255,255,0.1);padding:15px;margin:10px 0;border-radius:10px;display:flex;justify-content:space-between;}
+        .product{background:rgba(255,255,255,0.1);padding:15px;margin:10px 0;border-radius:10px;display:flex;justify-content:space-between;align-items:center;}
         .price{color:#ffcc00;}
         .tab{display:inline-block;padding:10px 20px;margin:5px;background:#333;border-radius:10px;cursor:pointer;}
         .tab.active{background:#ffcc00;color:#1a1a2e;}
+        .cart-item{background:rgba(255,255,255,0.05);padding:10px;margin:5px 0;border-radius:8px;display:flex;justify-content:space-between;}
+        button{background:#ffcc00;color:#1a1a2e;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;}
+        .qty-btn{background:#333;color:#fff;width:30px;height:30px;padding:0;}
+        .checkout{background:#ffcc00;color:#1a1a2e;padding:16px;width:100%;border-radius:10px;margin-top:20px;font-size:18px;font-weight:bold;}
+        input{width:100%;padding:14px;border-radius:10px;border:none;margin:10px 0;}
+        .cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
     </style>
 </head>
 <body>
     <h1>🔥 Akuma UC BOT 24/7</h1>
+    <p>Быстрая покупка UC | 24/7 | Мгновенная выдача</p>
     
     <div>
         <div class="tab active" onclick="showTab('uc')">UC</div>
@@ -27,22 +34,33 @@ HTML = '''<!DOCTYPE html>
         <div class="tab" onclick="showTab('costumes')">X-костюмы</div>
     </div>
     
-    <div id="products"></div>
+    <div id="products" style="margin-top:20px;"></div>
     
     <div style="margin-top:20px;background:rgba(0,0,0,0.5);padding:20px;border-radius:10px;">
-        <h3>🛒 Корзина</h3>
+        <div class="cart-header">
+            <h3>🛒 Корзина</h3>
+            <button onclick="clearCart()">Очистить</button>
+        </div>
         <div id="cart"></div>
-        <div id="total">Итого: 0 ₽</div>
-        <button onclick="clearCart()" style="background:#ff4444;color:#fff;border:none;padding:10px;border-radius:10px;">Очистить</button>
+        <div id="total" style="text-align:right;margin-top:15px;font-size:18px;font-weight:bold;color:#ffcc00;">Итого: 0 ₽</div>
     </div>
     
-    <div style="margin-top:20px;">
-        <input type="number" id="pubg_id" placeholder="Введите PUBG ID (начинается с 5)" style="width:100%;padding:14px;border-radius:10px;">
-    </div>
+    <input type="number" id="pubg_id" placeholder="Введите PUBG ID получателя (начинается с 5)">
     
-    <button onclick="checkout()" style="background:#ffcc00;color:#1a1a2e;padding:16px;width:100%;border-radius:10px;margin-top:20px;font-size:18px;">Купить</button>
+    <button class="checkout" onclick="checkout()">Купить</button>
+    
+    <div class="modal" id="orderModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1000;justify-content:center;align-items:center;">
+        <div style="background:#2e004d;border-radius:24px;padding:30px;text-align:center;border:2px solid #ffcc00;max-width:350px;">
+            <h2 style="color:#ffcc00;">✅ ЗАКАЗ ПРИНЯТ!</h2>
+            <div id="modalOrderId" style="font-size:32px;font-weight:bold;color:#ffcc00;margin:15px 0;">#0</div>
+            <p>на сумму</p>
+            <div id="modalTotal" style="font-size:28px;color:#ffcc00;font-weight:bold;">0 ₽</div>
+            <button onclick="window.location.href='https://t.me/akuma_ucbot'" style="background:#ffcc00;border:none;padding:12px 30px;border-radius:12px;color:#1a0033;font-weight:bold;margin-top:20px;width:100%;">📱 Перейти в бота</button>
+        </div>
+    </div>
     
     <script>
+        // ТОВАРЫ
         var products = {
             uc: {
                 "60": {name: "60 UC", price: 87},
@@ -56,7 +74,10 @@ HTML = '''<!DOCTYPE html>
                 "720": {name: "720 UC", price: 771},
                 "985": {name: "985 UC", price: 1049},
                 "1320": {name: "1320 UC", price: 1401},
-                "1800": {name: "1800 UC", price: 1891}
+                "1800": {name: "1800 UC", price: 1891},
+                "3850": {name: "3850 UC", price: 3753},
+                "8100": {name: "8100 UC", price: 7243},
+                "9900": {name: "9900 UC", price: 9790}
             },
             pp: {
                 "10000": {name: "10 000 ПП", price: 152},
@@ -78,7 +99,7 @@ HTML = '''<!DOCTYPE html>
             }
         };
         
-        var cart = {};
+        var cart = JSON.parse(localStorage.getItem('cart')) || {};
         var currentTab = 'uc';
         
         function showTab(tab) {
@@ -103,14 +124,16 @@ HTML = '''<!DOCTYPE html>
                 if (currentTab === 'uc') {
                     html += '<div class="product">' +
                         '<div><strong>' + p.name + '</strong><br><span class="price">' + p.price + ' ₽</span></div>' +
-                        '<div><button onclick="updateQty(\'' + key + '\', -1)" style="background:#333;color:#fff;border:none;width:30px;height:30px;border-radius:8px;">-</button> ' +
-                        '<span style="min-width:30px;display:inline-block;text-align:center;">' + qty + '</span> ' +
-                        '<button onclick="updateQty(\'' + key + '\', 1)" style="background:#ffcc00;color:#1a1a2e;border:none;width:30px;height:30px;border-radius:8px;">+</button></div>' +
+                        '<div>' +
+                            '<button class="qty-btn" onclick="updateQty(\'' + key + '\', -1)">-</button> ' +
+                            '<span style="min-width:40px;display:inline-block;text-align:center;">' + qty + '</span> ' +
+                            '<button class="qty-btn" onclick="updateQty(\'' + key + '\', 1)" style="background:#ffcc00;color:#1a1a2e;">+</button>' +
+                        '</div>' +
                     '</div>';
                 } else {
                     html += '<div class="product">' +
                         '<div><strong>' + p.name + '</strong><br><span class="price">' + p.price + ' ₽</span></div>' +
-                        '<div><button onclick="addToCart(\'' + key + '\', \'' + p.name + '\', ' + p.price + ')" style="background:#ffcc00;color:#1a1a2e;border:none;padding:8px 20px;border-radius:10px;">Выбрать</button></div>' +
+                        '<div><button onclick="addToCart(\'' + key + '\', \'' + p.name + '\', ' + p.price + ')">Выбрать</button></div>' +
                     '</div>';
                 }
             }
@@ -145,9 +168,9 @@ HTML = '''<!DOCTYPE html>
                 var item = cart[key];
                 var itemTotal = item.price * item.quantity;
                 total += itemTotal;
-                html += '<div>' + item.name + ' x' + item.quantity + ' = ' + itemTotal + ' ₽</div>';
+                html += '<div class="cart-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + itemTotal + ' ₽</span></div>';
             }
-            document.getElementById('cart').innerHTML = Object.keys(cart).length === 0 ? 'Корзина пуста' : html;
+            document.getElementById('cart').innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
             document.getElementById('total').innerHTML = 'Итого: ' + total + ' ₽';
         }
         
@@ -156,18 +179,25 @@ HTML = '''<!DOCTYPE html>
             saveCart();
             updateCartDisplay();
             renderProducts();
-            alert('Корзина очищена');
+            alert('🗑 Корзина очищена');
         }
         
         function saveCart() {
             localStorage.setItem('cart', JSON.stringify(cart));
         }
         
+        function showOrderModal(orderId, total) {
+            var modal = document.getElementById('orderModal');
+            document.getElementById('modalOrderId').innerText = '#' + orderId;
+            document.getElementById('modalTotal').innerText = total + ' ₽';
+            modal.style.display = 'flex';
+        }
+        
         async function checkout() {
             var pubgId = document.getElementById('pubg_id').value;
-            if (!pubgId) { alert('Введите PUBG ID'); return; }
-            if (!pubgId.toString().startsWith('5') || pubgId.length < 10) { alert('PUBG ID должен начинаться с 5 (10+ цифр)'); return; }
-            if (Object.keys(cart).length === 0) { alert('Корзина пуста'); return; }
+            if (!pubgId) { alert('❌ Введите PUBG ID'); return; }
+            if (!pubgId.toString().startsWith('5') || pubgId.length < 10) { alert('❌ PUBG ID должен начинаться с 5 (10+ цифр)'); return; }
+            if (Object.keys(cart).length === 0) { alert('❌ Корзина пуста'); return; }
             
             var total = 0;
             for (var key in cart) total += cart[key].price * cart[key].quantity;
@@ -180,16 +210,16 @@ HTML = '''<!DOCTYPE html>
                 });
                 var data = await response.json();
                 if (data.ok && data.order_id) {
-                    alert('✅ ЗАКАЗ ПРИНЯТ! Номер: #' + data.order_id + '\nСумма: ' + total + ' ₽\nПерейдите в бота для оплаты');
+                    showOrderModal(data.order_id, total);
                     cart = {};
                     saveCart();
                     updateCartDisplay();
                     renderProducts();
                 } else {
-                    alert('Ошибка при создании заказа');
+                    alert('❌ Ошибка при создании заказа');
                 }
             } catch(e) {
-                alert('Ошибка сервера');
+                alert('❌ Ошибка сервера');
             }
         }
         
@@ -207,5 +237,21 @@ def index():
 def create_order():
     import json
     data = request.json
-    print("Заказ:", data)
+    print("НОВЫЙ ЗАКАЗ:", data)
+    
+    # Отправляем уведомление админу
+    bot_token = os.environ.get("BOT_TOKEN")
+    admin_id = os.environ.get("ADMIN_ID", "8504217011")
+    
+    if bot_token:
+        try:
+            items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in data['items'].values()])
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🎮 PUBG ID: {data['pubg_id']}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {data['total']}₽**"
+            
+            import requests
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            requests.post(url, json={"chat_id": admin_id, "text": admin_text, "parse_mode": "Markdown"})
+        except Exception as e:
+            print("Ошибка отправки:", e)
+    
     return jsonify({'ok': True, 'order_id': 1})
