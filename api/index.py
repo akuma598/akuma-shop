@@ -65,8 +65,63 @@ HTML = f'''<!DOCTYPE html>
         .footer{{text-align:center;padding:20px;font-size:12px;color:#b87dff;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}}
         .footer a{{color:#ffcc00;text-decoration:none;}}
         .hide{{display:none;}}
-        .costume-img{{width:50px;height:50px;border-radius:12px;object-fit:cover;}}
-        .costume-info{{display:flex;align-items:center;gap:15px;}}
+        
+        /* Модальное окно */
+        .modal {{
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }}
+        .modal-content {{
+            background: linear-gradient(135deg, #2e004d, #1a0033);
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid #ffcc00;
+            max-width: 350px;
+            margin: 20px;
+        }}
+        .modal-content h2 {{
+            color: #ffcc00;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }}
+        .modal-content p {{
+            margin: 10px 0;
+            font-size: 16px;
+        }}
+        .modal-content .order-id {{
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffcc00;
+            margin: 15px 0;
+        }}
+        .modal-content .total {{
+            font-size: 28px;
+            color: #ffcc00;
+            font-weight: bold;
+        }}
+        .modal-btn {{
+            background: linear-gradient(135deg,#ffcc00,#ff9900);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 12px;
+            color: #1a0033;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }}
+        .modal-btn:hover {{
+            opacity: 0.9;
+        }}
     </style>
 </head>
 <body>
@@ -83,18 +138,10 @@ HTML = f'''<!DOCTYPE html>
             <div class="tab" onclick="switchTab('costumes')">X-костюмы</div>
         </div>
         
-        <div id="tab-uc">
-            <div id="uc-products"></div>
-        </div>
-        <div id="tab-pp" class="hide">
-            <div id="pp-products"></div>
-        </div>
-        <div id="tab-prime" class="hide">
-            <div id="prime-products"></div>
-        </div>
-        <div id="tab-costumes" class="hide">
-            <div id="costumes-products"></div>
-        </div>
+        <div id="tab-uc"><div id="uc-products"></div></div>
+        <div id="tab-pp" class="hide"><div id="pp-products"></div></div>
+        <div id="tab-prime" class="hide"><div id="prime-products"></div></div>
+        <div id="tab-costumes" class="hide"><div id="costumes-products"></div></div>
         
         <div class="cart-section">
             <div class="cart-header">
@@ -135,10 +182,20 @@ HTML = f'''<!DOCTYPE html>
         </div>
     </div>
     
+    <!-- Модальное окно -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <h2>✅ ЗАКАЗ ПРИНЯТ!</h2>
+            <p>Ваш заказ успешно оформлен</p>
+            <div class="order-id" id="modalOrderId">#0</div>
+            <p>на сумму</p>
+            <div class="total" id="modalTotal">0 ₽</div>
+            <p style="margin-top: 15px;">Перейдите в бота для оплаты</p>
+            <button class="modal-btn" onclick="goToBot()">📱 Перейти в бота</button>
+        </div>
+    </div>
+    
     <script>
-        // ===== ВСЕ ТОВАРЫ =====
-        
-        // UC ТОВАРЫ (15 штук) с картинками
         const ucProducts = {{
             "60": {{"name": "60 UC", "price": 87, "icon": "{UC_IMAGE}"}},
             "120": {{"name": "120 UC", "price": 152, "icon": "{UC_IMAGE}"}},
@@ -157,7 +214,6 @@ HTML = f'''<!DOCTYPE html>
             "9900": {{"name": "9900 UC", "price": 9790, "icon": "{UC_IMAGE}"}}
         }};
         
-        // ПП ТОВАРЫ (6 штук) с картинками
         const ppProducts = {{
             "10000": {{"name": "10 000 ПП", "price": 152, "icon": "{PP_IMAGE}"}},
             "20000": {{"name": "20 000 ПП", "price": 289, "icon": "{PP_IMAGE}"}},
@@ -167,7 +223,6 @@ HTML = f'''<!DOCTYPE html>
             "60000": {{"name": "60 000 ПП", "price": 833, "icon": "{PP_IMAGE}"}}
         }};
         
-        // PRIME ПОДПИСКИ (4 штуки) с картинками
         const primeProducts = {{
             "1m": {{"name": "Prime (1 месяц)", "price": 125, "icon": "{PRIME_IMAGE}"}},
             "3m": {{"name": "Prime (3 месяца)", "price": 318, "icon": "{PRIME_IMAGE}"}},
@@ -175,7 +230,6 @@ HTML = f'''<!DOCTYPE html>
             "12m": {{"name": "Prime (12 месяцев)", "price": 1027, "icon": "{PRIME_IMAGE}"}}
         }};
         
-        // X-КОСТЮМЫ (2 штуки) с отдельными картинками
         const costumesProducts = {{
             "1": {{"name": "🐦‍⬛ Ворон", "price": 4500, "icon": "{COSTUME1_IMAGE}"}},
             "2": {{"name": "🔥 Феникс", "price": 4500, "icon": "{COSTUME2_IMAGE}"}}
@@ -300,10 +354,21 @@ HTML = f'''<!DOCTYPE html>
             document.getElementById(`tab-${{tab}}`).classList.remove('hide');
         }}
         
+        function showOrderModal(orderId, total) {{
+            const modal = document.getElementById('orderModal');
+            document.getElementById('modalOrderId').innerText = '#' + orderId;
+            document.getElementById('modalTotal').innerText = total + ' ₽';
+            modal.style.display = 'flex';
+        }}
+        
+        function goToBot() {{
+            window.location.href = 'https://t.me/' + botUsername;
+        }}
+        
         async function checkout() {{
             const pubgId = document.getElementById('pubg_id').value;
-            if (!pubgId) {{ alert('❌ Введите PUBG ID получателя'); return; }}
-            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) {{ alert('❌ PUBG ID должен начинаться с 5 и содержать минимум 10 цифр'); return; }}
+            if (!pubgId) {{ alert('❌ Введите PUBG ID'); return; }}
+            if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) {{ alert('❌ PUBG ID должен начинаться с 5 (10+ цифр)'); return; }}
             if (Object.keys(cart).length === 0) {{ alert('❌ Корзина пуста'); return; }}
             if (!selectedPayment) {{ alert('❌ Выберите способ оплаты'); return; }}
             
@@ -318,7 +383,11 @@ HTML = f'''<!DOCTYPE html>
                 }});
                 const data = await response.json();
                 if (data.ok && data.order_id) {{
-                    window.location.href = 'https://t.me/' + botUsername + '?start=order_' + data.order_id;
+                    showOrderModal(data.order_id, total);
+                    cart = {{}};
+                    updateCartDisplay();
+                    selectedPayment = null;
+                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
                 }} else {{
                     alert('❌ Ошибка при создании заказа');
                 }}
@@ -355,7 +424,7 @@ def create_order():
     order_id = order_counter
     order_counter += 1
     
-    order_details = {
+    temp_orders[order_id] = {
         'pubg_id': pubg_id,
         'items': items,
         'total': total,
@@ -363,12 +432,11 @@ def create_order():
         'status': 'pending',
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-    temp_orders[order_id] = order_details
     
     if BOT_TOKEN:
         try:
             items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
-            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 Товары:\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
             
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
