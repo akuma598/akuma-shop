@@ -13,17 +13,24 @@ ADMIN_ID = os.environ.get("ADMIN_ID", "8504217011")
 temp_orders = {}
 order_counter = 1
 
-# ===== ТОВАРЫ UC (цены +15₽) =====
+# ID картинок
+UC_IMAGE = "AgACAgIAAxkBAAEpH_RqBA2vvfInrAAB2cuLTUv2Y4DWKvUAAtcUaxv_-CFIWx3Af8eflaIBAAMCAAN4AAM7BA"
+PP_IMAGE = "AgACAgIAAxkBAAEpH_ZqBA3FZt5BaW8pOpj769e_C5y8xgAC2BRrG__4IUjQZtN17OtlEwEAAwIAA3gAAzsE"
+PRIME_IMAGE = "AgACAgIAAxkBAAEpH_hqBA3TAU1b0eAoyBWcGcf2-i0KDwAC2RRrG__4IUhl2i_0P5uuWwEAAwIAA3MAAzsE"
+COSTUME1_IMAGE = "AgACAgIAAxkBAAEpH_xqBA58yWfiNOx6mHN-I0qONkbMegAC3hRrG__4IUh-a9DIQamflgEAAwIAA3MAAzsE"
+COSTUME2_IMAGE = "AgACAgIAAxkBAAEpH_5qBA6UBNCsgo4zZ-DDSwadDs9iHgAC4RRrG__4IUj1Wbn6yP2wVgEAAwIAA3MAAzsE"
+
+# Товары UC
 UC_PRODUCTS = {
-    "60": {"name": "60 UC", "price": 87, "old_price": 95},
-    "325": {"name": "325 UC", "price": 387, "old_price": 425},
-    "660": {"name": "660 UC", "price": 756, "old_price": 835},
-    "1800": {"name": "1800 UC", "price": 1891, "old_price": 2095},
-    "3850": {"name": "3850 UC", "price": 3753, "old_price": 4165},
-    "8100": {"name": "8100 UC", "price": 7243, "old_price": 8045}
+    "60": {"name": "60 UC", "price": 87},
+    "325": {"name": "325 UC", "price": 387},
+    "660": {"name": "660 UC", "price": 756},
+    "1800": {"name": "1800 UC", "price": 1891},
+    "3850": {"name": "3850 UC", "price": 3753},
+    "8100": {"name": "8100 UC", "price": 7243}
 }
 
-# ===== ТОВАРЫ ПП (Популярность, +15₽) =====
+# Товары ПП (Популярность)
 PP_PRODUCTS = {
     "10000": {"name": "10 000 ПП", "price": 152},
     "20000": {"name": "20 000 ПП", "price": 289},
@@ -33,7 +40,7 @@ PP_PRODUCTS = {
     "60000": {"name": "60 000 ПП", "price": 833}
 }
 
-# ===== ПОДПИСКИ PRIME (+15₽) =====
+# Подписки Prime
 PRIME_PRODUCTS = {
     "1m": {"name": "Prime (1 месяц)", "price": 125},
     "3m": {"name": "Prime (3 месяца)", "price": 318},
@@ -41,11 +48,10 @@ PRIME_PRODUCTS = {
     "12m": {"name": "Prime (12 месяцев)", "price": 1027}
 }
 
-# ===== X-КОСТЮМЫ (+15₽) =====
+# X-костюмы
 COSTUMES_PRODUCTS = {
-    "1": {"name": "X-КОСТЮМ Огненный демон", "price": 515},
-    "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 565},
-    "3": {"name": "X-КОСТЮМ Призрачный убийца", "price": 615}
+    "1": {"name": "X-КОСТЮМ Огненный демон", "price": 4500, "image": COSTUME1_IMAGE},
+    "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 4500, "image": COSTUME2_IMAGE}
 }
 
 HTML = '''<!DOCTYPE html>
@@ -64,19 +70,18 @@ HTML = '''<!DOCTYPE html>
         .tabs{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}
         .tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}
         .tab.active{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}
-        .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);transition:all 0.2s;}
+        .section-image{width:100%;border-radius:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);}
+        .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);}
         .product-card:hover{background:rgba(255,255,255,0.1);border-color:#ffcc00;}
         .product-info h3{font-size:18px;margin-bottom:5px;}
         .product-info .price{color:#ffcc00;font-weight:bold;}
-        .product-info .old-price{color:#888;font-size:12px;text-decoration:line-through;margin-left:10px;}
-        .product-actions{display:flex;align-items:center;gap:15px;}
-        .quantity-control{display:flex;align-items:center;gap:10px;}
-        .quantity-btn{background:rgba(255,255,255,0.1);border:none;width:32px;height:32px;border-radius:8px;color:#fff;font-size:20px;cursor:pointer;transition:all 0.2s;}
-        .quantity-btn:hover{background:#ffcc00;color:#1a1a2e;}
-        .quantity{font-size:16px;font-weight:bold;min-width:30px;text-align:center;}
-        .select-btn{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a1a2e;font-weight:bold;cursor:pointer;transition:opacity 0.2s;}
-        .select-btn:hover{opacity:0.9;}
+        .product-actions{display:flex;align-items:center;}
+        .buy-btn,.select-btn{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a1a2e;font-weight:bold;cursor:pointer;font-size:14px;}
+        .buy-btn:hover,.select-btn:hover{opacity:0.9;}
         .cart-section{background:rgba(0,0,0,0.5);border-radius:16px;padding:20px;margin-top:20px;border:1px solid rgba(255,204,0,0.3);}
+        .cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+        .cart-header h3{font-size:18px;}
+        .clear-cart{background:rgba(255,0,0,0.2);border:1px solid #ff4444;color:#ff4444;padding:8px 15px;border-radius:10px;cursor:pointer;font-size:14px;}
         .cart-item{display:flex;justify-content:space-between;margin-bottom:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);}
         .cart-total{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.2);font-size:18px;font-weight:bold;text-align:right;color:#ffcc00;}
         .pubg-section{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin:20px 0;}
@@ -91,9 +96,6 @@ HTML = '''<!DOCTYPE html>
         .footer{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}
         .footer a{color:#ffcc00;text-decoration:none;}
         .hide{display:none;}
-        .cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
-        .clear-cart{background:rgba(255,0,0,0.2);border:1px solid #ff4444;color:#ff4444;padding:8px 15px;border-radius:10px;cursor:pointer;font-size:14px;}
-        .clear-cart:hover{background:rgba(255,0,0,0.3);}
     </style>
 </head>
 <body>
@@ -110,10 +112,19 @@ HTML = '''<!DOCTYPE html>
             <div class="tab" onclick="switchTab('costumes')">X-костюмы</div>
         </div>
         
-        <div id="tab-uc"><div id="uc-products"></div></div>
-        <div id="tab-pp" class="hide"><div id="pp-products"></div></div>
-        <div id="tab-prime" class="hide"><div id="prime-products"></div></div>
-        <div id="tab-costumes" class="hide"><div id="costumes-products"></div></div>
+        <div id="tab-uc">
+            <img class="section-image" src="https://api.telegram.org/file/bot{BOT_TOKEN}/photos/file_0.jpg" alt="UC" style="display:none;">
+            <div id="uc-products"></div>
+        </div>
+        <div id="tab-pp" class="hide">
+            <div id="pp-products"></div>
+        </div>
+        <div id="tab-prime" class="hide">
+            <div id="prime-products"></div>
+        </div>
+        <div id="tab-costumes" class="hide">
+            <div id="costumes-products"></div>
+        </div>
         
         <div class="cart-section">
             <div class="cart-header">
@@ -156,12 +167,12 @@ HTML = '''<!DOCTYPE html>
     
     <script>
         const ucProducts = {
-            "60": {"name": "60 UC", "price": 87, "oldPrice": 95},
-            "325": {"name": "325 UC", "price": 387, "oldPrice": 425},
-            "660": {"name": "660 UC", "price": 756, "oldPrice": 835},
-            "1800": {"name": "1800 UC", "price": 1891, "oldPrice": 2095},
-            "3850": {"name": "3850 UC", "price": 3753, "oldPrice": 4165},
-            "8100": {"name": "8100 UC", "price": 7243, "oldPrice": 8045}
+            "60": {"name": "60 UC", "price": 87},
+            "325": {"name": "325 UC", "price": 387},
+            "660": {"name": "660 UC", "price": 756},
+            "1800": {"name": "1800 UC", "price": 1891},
+            "3850": {"name": "3850 UC", "price": 3753},
+            "8100": {"name": "8100 UC", "price": 7243}
         };
         
         const ppProducts = {
@@ -181,9 +192,8 @@ HTML = '''<!DOCTYPE html>
         };
         
         const costumesProducts = {
-            "1": {"name": "X-КОСТЮМ Огненный демон", "price": 515},
-            "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 565},
-            "3": {"name": "X-КОСТЮМ Призрачный убийца", "price": 615}
+            "1": {"name": "X-КОСТЮМ Огненный демон", "price": 4500},
+            "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 4500}
         };
         
         let cart = {};
@@ -194,18 +204,8 @@ HTML = '''<!DOCTYPE html>
             let html = '';
             for (const [key, product] of Object.entries(ucProducts)) {
                 html += '<div class="product-card">' +
-                    '<div class="product-info">' +
-                        '<h3>' + product.name + '</h3>' +
-                        '<div><span class="price">' + product.price + ' ₽</span>' +
-                        '<span class="old-price">' + product.oldPrice + ' ₽</span></div>' +
-                    '</div>' +
-                    '<div class="product-actions">' +
-                        '<div class="quantity-control">' +
-                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', -1)">-</button>' +
-                            '<span class="quantity" id="qty-' + key + '">' + (cart[key] ? cart[key].quantity : 0) + '</span>' +
-                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', 1)">+</button>' +
-                        '</div>' +
-                    '</div>' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions"><button class="buy-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Купить</button></div>' +
                 '</div>';
             }
             container.innerHTML = html;
@@ -216,13 +216,8 @@ HTML = '''<!DOCTYPE html>
             let html = '';
             for (const [key, product] of Object.entries(ppProducts)) {
                 html += '<div class="product-card">' +
-                    '<div class="product-info">' +
-                        '<h3>' + product.name + '</h3>' +
-                        '<div><span class="price">' + product.price + ' ₽</span></div>' +
-                    '</div>' +
-                    '<div class="product-actions">' +
-                        '<button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button>' +
-                    '</div>' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
             }
             container.innerHTML = html;
@@ -233,13 +228,8 @@ HTML = '''<!DOCTYPE html>
             let html = '';
             for (const [key, product] of Object.entries(primeProducts)) {
                 html += '<div class="product-card">' +
-                    '<div class="product-info">' +
-                        '<h3>' + product.name + '</h3>' +
-                        '<div><span class="price">' + product.price + ' ₽</span></div>' +
-                    '</div>' +
-                    '<div class="product-actions">' +
-                        '<button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button>' +
-                    '</div>' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
             }
             container.innerHTML = html;
@@ -250,36 +240,15 @@ HTML = '''<!DOCTYPE html>
             let html = '';
             for (const [key, product] of Object.entries(costumesProducts)) {
                 html += '<div class="product-card">' +
-                    '<div class="product-info">' +
-                        '<h3>' + product.name + '</h3>' +
-                        '<div><span class="price">' + product.price + ' ₽</span></div>' +
-                    '</div>' +
-                    '<div class="product-actions">' +
-                        '<button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button>' +
-                    '</div>' +
+                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
             }
             container.innerHTML = html;
         }
         
-        function updateQuantity(key, delta) {
-            if (!cart[key]) {
-                cart[key] = {name: ucProducts[key].name, price: ucProducts[key].price, quantity: 0};
-            }
-            let newQty = cart[key].quantity + delta;
-            if (newQty <= 0) {
-                delete cart[key];
-            } else {
-                cart[key].quantity = newQty;
-            }
-            updateCartDisplay();
-            renderUCProducts();
-        }
-        
         function addToCart(key, name, price) {
-            if (!cart[key]) {
-                cart[key] = {name: name, price: price, quantity: 0};
-            }
+            if (!cart[key]) cart[key] = {name: name, price: price, quantity: 0};
             cart[key].quantity++;
             updateCartDisplay();
             alert('✅ ' + name + ' добавлен в корзину');
@@ -301,7 +270,6 @@ HTML = '''<!DOCTYPE html>
         function clearCart() {
             cart = {};
             updateCartDisplay();
-            renderUCProducts();
             alert('🗑 Корзина очищена');
         }
         
