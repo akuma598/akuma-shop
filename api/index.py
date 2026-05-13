@@ -29,7 +29,6 @@ HTML = '''<!DOCTYPE html>
         .tabs{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}
         .tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}
         .tab.active{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}
-        .products-container{min-height:300px;}
         .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);}
         .product-card:hover{background:rgba(255,255,255,0.1);border-color:#ffcc00;}
         .product-info h3{font-size:18px;margin-bottom:5px;}
@@ -71,18 +70,16 @@ HTML = '''<!DOCTYPE html>
         </div>
         
         <div class="tabs">
-            <div class="tab" data-tab="uc">UC</div>
+            <div class="tab active" data-tab="uc">UC</div>
             <div class="tab" data-tab="pp">Популярность</div>
             <div class="tab" data-tab="prime">Подписки</div>
             <div class="tab" data-tab="costumes">X-костюмы</div>
         </div>
         
-        <div class="products-container">
-            <div id="tab-uc"><div id="uc-products"></div></div>
-            <div id="tab-pp" class="hide"><div id="pp-products"></div></div>
-            <div id="tab-prime" class="hide"><div id="prime-products"></div></div>
-            <div id="tab-costumes" class="hide"><div id="costumes-products"></div></div>
-        </div>
+        <div id="uc-products" class="products-list"></div>
+        <div id="pp-products" class="products-list hide"></div>
+        <div id="prime-products" class="products-list hide"></div>
+        <div id="costumes-products" class="products-list hide"></div>
         
         <div class="cart-section">
             <div class="cart-header">
@@ -117,122 +114,80 @@ HTML = '''<!DOCTYPE html>
             <div class="order-id" id="modalOrderId">#0</div>
             <p>на сумму</p>
             <div class="total" id="modalTotal">0 ₽</div>
-            <button class="modal-btn" id="goToBotBtn">📱 Перейти в бота для оплаты</button>
+            <button class="modal-btn" onclick="window.location.href='https://t.me/akuma_ucbot'">📱 Перейти в бота</button>
         </div>
     </div>
     
     <script>
-        // ===== ВСЕ ТОВАРЫ (ПАКИ) =====
-        
-        // UC ТОВАРЫ (15 штук)
+        // UC ТОВАРЫ
         const ucProducts = {
-            "60": {"name": "60 UC", "price": 87},
-            "120": {"name": "120 UC", "price": 152},
-            "180": {"name": "180 UC", "price": 223},
-            "240": {"name": "240 UC", "price": 293},
-            "325": {"name": "325 UC", "price": 387},
-            "385": {"name": "385 UC", "price": 434},
-            "445": {"name": "445 UC", "price": 482},
-            "660": {"name": "660 UC", "price": 756},
-            "720": {"name": "720 UC", "price": 771},
-            "985": {"name": "985 UC", "price": 1049},
-            "1320": {"name": "1320 UC", "price": 1401},
-            "1800": {"name": "1800 UC", "price": 1891},
-            "3850": {"name": "3850 UC", "price": 3753},
-            "8100": {"name": "8100 UC", "price": 7243},
-            "9900": {"name": "9900 UC", "price": 9790}
+            "60": {name: "60 UC", price: 87},
+            "120": {name: "120 UC", price: 152},
+            "180": {name: "180 UC", price: 223},
+            "240": {name: "240 UC", price: 293},
+            "325": {name: "325 UC", price: 387},
+            "385": {name: "385 UC", price: 434},
+            "445": {name: "445 UC", price: 482},
+            "660": {name: "660 UC", price: 756},
+            "720": {name: "720 UC", price: 771},
+            "985": {name: "985 UC", price: 1049},
+            "1320": {name: "1320 UC", price: 1401},
+            "1800": {name: "1800 UC", price: 1891},
+            "3850": {name: "3850 UC", price: 3753},
+            "8100": {name: "8100 UC", price: 7243},
+            "9900": {name: "9900 UC", price: 9790}
         };
         
-        // ПП ТОВАРЫ (6 штук)
+        // ПП ТОВАРЫ
         const ppProducts = {
-            "10000": {"name": "10 000 ПП", "price": 152},
-            "20000": {"name": "20 000 ПП", "price": 289},
-            "30000": {"name": "30 000 ПП", "price": 424},
-            "40000": {"name": "40 000 ПП", "price": 561},
-            "50000": {"name": "50 000 ПП", "price": 696},
-            "60000": {"name": "60 000 ПП", "price": 833}
+            "10000": {name: "10 000 ПП", price: 152},
+            "20000": {name: "20 000 ПП", price: 289},
+            "30000": {name: "30 000 ПП", price: 424},
+            "40000": {name: "40 000 ПП", price: 561},
+            "50000": {name: "50 000 ПП", price: 696},
+            "60000": {name: "60 000 ПП", price: 833}
         };
         
-        // ПОДПИСКИ PRIME (4 штуки)
+        // PRIME ПОДПИСКИ
         const primeProducts = {
-            "1m": {"name": "Prime (1 месяц)", "price": 125},
-            "3m": {"name": "Prime (3 месяца)", "price": 318},
-            "6m": {"name": "Prime (6 месяцев)", "price": 550},
-            "12m": {"name": "Prime (12 месяцев)", "price": 1027}
+            "1m": {name: "Prime (1 месяц)", price: 125},
+            "3m": {name: "Prime (3 месяца)", price: 318},
+            "6m": {name: "Prime (6 месяцев)", price: 550},
+            "12m": {name: "Prime (12 месяцев)", price: 1027}
         };
         
-        // X-КОСТЮМЫ (2 штуки)
+        // X-КОСТЮМЫ
         const costumesProducts = {
-            "1": {"name": "🐦‍⬛ Ворон", "price": 4500},
-            "2": {"name": "🔥 Феникс", "price": 4500}
+            "1": {name: "🐦‍⬛ Ворон", price: 4500},
+            "2": {name: "🔥 Феникс", price: 4500}
         };
-        
-        const botUsername = "akuma_ucbot";
-        const botLink = "https://t.me/" + botUsername;
         
         let cart = JSON.parse(localStorage.getItem('cart')) || {};
         let selectedPayment = localStorage.getItem('selectedPayment') || null;
-        let currentTab = 'uc';
         
-        function renderUCProducts() {
-            console.log("Рендер UC товаров, количество:", Object.keys(ucProducts).length);
-            const container = document.getElementById('uc-products');
+        function renderProducts(containerId, products, type) {
+            const container = document.getElementById(containerId);
             if (!container) return;
             let html = '';
-            for (const [key, product] of Object.entries(ucProducts)) {
+            for (const [key, product] of Object.entries(products)) {
                 const qty = cart[key] ? cart[key].quantity : 0;
-                html += '<div class="product-card">' +
-                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions">' +
-                        '<div class="quantity-control">' +
-                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', -1)">-</button>' +
-                            '<span class="quantity">' + qty + '</span>' +
-                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', 1)">+</button>' +
+                if (type === 'uc') {
+                    html += '<div class="product-card">' +
+                        '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                        '<div class="product-actions">' +
+                            '<div class="quantity-control">' +
+                                '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', -1)">-</button>' +
+                                '<span class="quantity">' + qty + '</span>' +
+                                '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', 1)">+</button>' +
+                            '</div>' +
                         '</div>' +
-                    '</div>' +
-                '</div>';
-            }
-            container.innerHTML = html;
-        }
-        
-        function renderPPProducts() {
-            console.log("Рендер ПП товаров, количество:", Object.keys(ppProducts).length);
-            const container = document.getElementById('pp-products');
-            if (!container) return;
-            let html = '';
-            for (const [key, product] of Object.entries(ppProducts)) {
-                html += '<div class="product-card">' +
-                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
-                '</div>';
-            }
-            container.innerHTML = html;
-        }
-        
-        function renderPrimeProducts() {
-            console.log("Рендер Prime товаров, количество:", Object.keys(primeProducts).length);
-            const container = document.getElementById('prime-products');
-            if (!container) return;
-            let html = '';
-            for (const [key, product] of Object.entries(primeProducts)) {
-                html += '<div class="product-card">' +
-                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
-                '</div>';
-            }
-            container.innerHTML = html;
-        }
-        
-        function renderCostumesProducts() {
-            console.log("Рендер костюмов, количество:", Object.keys(costumesProducts).length);
-            const container = document.getElementById('costumes-products');
-            if (!container) return;
-            let html = '';
-            for (const [key, product] of Object.entries(costumesProducts)) {
-                html += '<div class="product-card">' +
-                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
-                    '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
-                '</div>';
+                    '</div>';
+                } else {
+                    html += '<div class="product-card">' +
+                        '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                        '<div class="product-actions"><button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button></div>' +
+                    '</div>';
+                }
             }
             container.innerHTML = html;
         }
@@ -240,14 +195,11 @@ HTML = '''<!DOCTYPE html>
         function updateQuantity(key, delta) {
             if (!cart[key]) cart[key] = {name: ucProducts[key].name, price: ucProducts[key].price, quantity: 0};
             let newQty = cart[key].quantity + delta;
-            if (newQty <= 0) {
-                delete cart[key];
-            } else {
-                cart[key].quantity = newQty;
-            }
+            if (newQty <= 0) delete cart[key];
+            else cart[key].quantity = newQty;
             saveCart();
             updateCartDisplay();
-            renderUCProducts();
+            renderProducts('uc-products', ucProducts, 'uc');
         }
         
         function addToCart(key, name, price) {
@@ -259,7 +211,6 @@ HTML = '''<!DOCTYPE html>
         }
         
         function updateCartDisplay() {
-            const container = document.getElementById('cart-items');
             let total = 0;
             let html = '';
             for (const [key, item] of Object.entries(cart)) {
@@ -267,7 +218,7 @@ HTML = '''<!DOCTYPE html>
                 total += itemTotal;
                 html += '<div class="cart-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + itemTotal + ' ₽</span></div>';
             }
-            container.innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
+            document.getElementById('cart-items').innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
             document.getElementById('cart-total').innerHTML = 'Итого: ' + total + ' ₽';
         }
         
@@ -275,7 +226,7 @@ HTML = '''<!DOCTYPE html>
             cart = {};
             saveCart();
             updateCartDisplay();
-            if (currentTab === 'uc') renderUCProducts();
+            renderProducts('uc-products', ucProducts, 'uc');
             alert('🗑 Корзина очищена');
         }
         
@@ -291,35 +242,32 @@ HTML = '''<!DOCTYPE html>
             document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('selected');
         }
         
+        let currentTab = 'uc';
+        
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
-            document.getElementById('tab-uc').classList.add('hide');
-            document.getElementById('tab-pp').classList.add('hide');
-            document.getElementById('tab-prime').classList.add('hide');
-            document.getElementById('tab-costumes').classList.add('hide');
-            document.getElementById(`tab-${tab}`).classList.remove('hide');
-            if (tab === 'uc') renderUCProducts();
-            if (tab === 'pp') renderPPProducts();
-            if (tab === 'prime') renderPrimeProducts();
-            if (tab === 'costumes') renderCostumesProducts();
-        }
-        
-        function goToBot() {
-            window.location.href = botLink;
+            document.getElementById('uc-products').classList.add('hide');
+            document.getElementById('pp-products').classList.add('hide');
+            document.getElementById('prime-products').classList.add('hide');
+            document.getElementById('costumes-products').classList.add('hide');
+            document.getElementById(`${tab}-products`).classList.remove('hide');
+            
+            if (tab === 'uc') renderProducts('uc-products', ucProducts, 'uc');
+            if (tab === 'pp') renderProducts('pp-products', ppProducts, 'pp');
+            if (tab === 'prime') renderProducts('prime-products', primeProducts, 'prime');
+            if (tab === 'costumes') renderProducts('costumes-products', costumesProducts, 'costumes');
         }
         
         function showOrderModal(orderId, total) {
-            const modal = document.getElementById('orderModal');
             document.getElementById('modalOrderId').innerText = '#' + orderId;
             document.getElementById('modalTotal').innerText = total + ' ₽';
-            modal.style.display = 'flex';
+            document.getElementById('orderModal').style.display = 'flex';
         }
         
         async function checkout() {
             const pubgId = document.getElementById('pubg_id').value;
-            
             if (!pubgId) { alert('❌ Введите PUBG ID'); return; }
             if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) { alert('❌ PUBG ID должен начинаться с 5 (10+ цифр)'); return; }
             if (Object.keys(cart).length === 0) { alert('❌ Корзина пуста'); return; }
@@ -340,7 +288,7 @@ HTML = '''<!DOCTYPE html>
                     cart = {};
                     saveCart();
                     updateCartDisplay();
-                    if (currentTab === 'uc') renderUCProducts();
+                    renderProducts('uc-products', ucProducts, 'uc');
                     selectedPayment = null;
                     document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
                 } else {
@@ -351,7 +299,7 @@ HTML = '''<!DOCTYPE html>
             }
         }
         
-        // Обработка параметра из бота
+        // Запуск
         const urlParams = new URLSearchParams(window.location.search);
         const section = urlParams.get('section');
         if (section === 'uc') switchTab('uc');
@@ -364,17 +312,6 @@ HTML = '''<!DOCTYPE html>
             const btn = document.querySelector(`.payment-btn[data-method="${selectedPayment}"]`);
             if (btn) btn.classList.add('selected');
         }
-        
-        document.getElementById('goToBotBtn').onclick = function() {
-            window.location.href = botLink;
-        };
-        
-        // Принудительный рендер
-        console.log("Сайт загружен, товары:");
-        console.log("UC:", Object.keys(ucProducts).length);
-        console.log("ПП:", Object.keys(ppProducts).length);
-        console.log("Prime:", Object.keys(primeProducts).length);
-        console.log("Костюмы:", Object.keys(costumesProducts).length);
     </script>
 </body>
 </html>'''
@@ -393,7 +330,6 @@ def create_order():
     payment_method = data.get('payment_method')
     
     print(f"📥 НОВЫЙ ЗАКАЗ: pubg_id={pubg_id}, total={total}, payment={payment_method}")
-    print(f"📦 ТОВАРЫ: {items}")
     
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
