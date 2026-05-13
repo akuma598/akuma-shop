@@ -11,133 +11,30 @@ HTML = '''<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akuma UC Shop</title>
     <style>
-        body {
-            font-family: Arial;
-            background: #1a1a2e;
-            color: #fff;
-            padding: 20px;
-        }
-        .product {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .price {
-            color: #ffcc00;
-        }
-        .tab {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 5px;
-            background: #333;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-        .tab.active {
-            background: #ffcc00;
-            color: #1a1a2e;
-        }
-        button {
-            background: #ffcc00;
-            color: #1a1a2e;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .qty-btn {
-            background: #333;
-            color: #fff;
-            width: 30px;
-            height: 30px;
-            padding: 0;
-        }
-        .cart-item {
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .checkout {
-            background: #ffcc00;
-            color: #1a1a2e;
-            padding: 16px;
-            width: 100%;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            border: none;
-            margin: 10px 0;
-        }
-        .cart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: #2e004d;
-            border-radius: 24px;
-            padding: 30px;
-            text-align: center;
-            border: 2px solid #ffcc00;
-            max-width: 350px;
-        }
-        .modal-content h2 {
-            color: #ffcc00;
-        }
-        .modal-order-id {
-            font-size: 32px;
-            font-weight: bold;
-            color: #ffcc00;
-            margin: 15px 0;
-        }
-        .modal-total {
-            font-size: 28px;
-            color: #ffcc00;
-            font-weight: bold;
-        }
-        .modal-btn {
-            background: #ffcc00;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 12px;
-            color: #1a0033;
-            font-weight: bold;
-            margin-top: 20px;
-            width: 100%;
-        }
+        body{font-family:Arial;background:#1a1a2e;color:#fff;padding:20px;}
+        .product{background:rgba(255,255,255,0.1);padding:15px;margin:10px 0;border-radius:10px;display:flex;justify-content:space-between;align-items:center;}
+        .price{color:#ffcc00;}
+        .tab{display:inline-block;padding:10px 20px;margin:5px;background:#333;border-radius:10px;cursor:pointer;}
+        .tab.active{background:#ffcc00;color:#1a1a2e;}
+        button{background:#ffcc00;color:#1a1a2e;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;}
+        .qty-btn{background:#333;color:#fff;width:30px;height:30px;padding:0;}
+        .cart-item{background:rgba(255,255,255,0.05);padding:10px;margin:5px 0;border-radius:8px;display:flex;justify-content:space-between;}
+        .checkout{background:#ffcc00;color:#1a1a2e;padding:16px;width:100%;border-radius:10px;margin-top:20px;font-size:18px;font-weight:bold;}
+        input{width:100%;padding:14px;border-radius:10px;border:none;margin:10px 0;}
+        .cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1000;justify-content:center;align-items:center;}
+        .modal-content{background:#2e004d;border-radius:24px;padding:30px;text-align:center;border:2px solid #ffcc00;max-width:350px;}
+        .modal-content h2{color:#ffcc00;}
+        .modal-order-id{font-size:32px;font-weight:bold;color:#ffcc00;margin:15px 0;}
+        .modal-total{font-size:28px;color:#ffcc00;font-weight:bold;}
+        .modal-btn{background:#ffcc00;border:none;padding:12px 30px;border-radius:12px;color:#1a0033;font-weight:bold;margin-top:20px;width:100%;}
     </style>
 </head>
 <body>
     <h1>🔥 Akuma UC BOT 24/7</h1>
     <p>Быстрая покупка UC | 24/7 | Мгновенная выдача</p>
     
-    <div id="tabs">
+    <div>
         <div class="tab active" onclick="showTab('uc')">UC</div>
         <div class="tab" onclick="showTab('pp')">Популярность</div>
         <div class="tab" onclick="showTab('prime')">Подписки</div>
@@ -170,8 +67,7 @@ HTML = '''<!DOCTYPE html>
     </div>
     
     <script>
-        // ВСЕ ТОВАРЫ
-        var allProducts = {
+        var products = {
             uc: [
                 ["60 UC", 87], ["120 UC", 152], ["180 UC", 223], ["240 UC", 293],
                 ["325 UC", 387], ["385 UC", 434], ["445 UC", 482], ["660 UC", 756],
@@ -187,7 +83,7 @@ HTML = '''<!DOCTYPE html>
                 ["Prime (6 месяцев)", 550], ["Prime (12 месяцев)", 1027]
             ],
             costumes: [
-                ["🐦‍⬛ Ворон", 4500], ["🔥 Феникс", 4500]
+                ["Ворон", 4500], ["Феникс", 4500]
             ]
         };
         
@@ -206,13 +102,13 @@ HTML = '''<!DOCTYPE html>
         
         function renderProducts() {
             var container = document.getElementById('products');
-            var products = allProducts[currentTab];
+            var items = products[currentTab];
             var html = '';
             
-            for (var i = 0; i < products.length; i++) {
-                var name = products[i][0];
-                var price = products[i][1];
-                var key = name.replace(/ /g, '_');
+            for (var i = 0; i < items.length; i++) {
+                var name = items[i][0];
+                var price = items[i][1];
+                var key = name + '_' + i;
                 var qty = cart[key] ? cart[key].qty : 0;
                 
                 if (currentTab === 'uc') {
@@ -221,7 +117,7 @@ HTML = '''<!DOCTYPE html>
                         '<div>' +
                             '<button class="qty-btn" onclick="updateQty(\'' + key + '\', \'' + name + '\', ' + price + ', -1)">-</button> ' +
                             '<span style="min-width:40px;display:inline-block;text-align:center;">' + qty + '</span> ' +
-                            '<button class="qty-btn" onclick="updateQty(\'' + key + '\', \'' + name + '\', ' + price + ', 1)" style="background:#ffcc00;color:#1a1a2e;">+</button>' +
+                            '<button class="qty-btn" onclick="updateQty(\'' + key + '\', \'' + name + '\', ' + price + ', 1)">+</button>' +
                         '</div>' +
                     '</div>';
                 } else {
@@ -264,7 +160,7 @@ HTML = '''<!DOCTYPE html>
                 total += itemTotal;
                 html += '<div class="cart-item"><span>' + item.name + ' x' + item.qty + '</span><span>' + itemTotal + ' ₽</span></div>';
             }
-            document.getElementById('cart').innerHTML = Object.keys(cart).length === 0 ? '<div style="text-align:center;color:#888;">Корзина пуста</div>' : html;
+            document.getElementById('cart').innerHTML = Object.keys(cart).length === 0 ? 'Корзина пуста' : html;
             document.getElementById('total').innerHTML = 'Итого: ' + total + ' ₽';
         }
         
@@ -273,7 +169,7 @@ HTML = '''<!DOCTYPE html>
             saveCart();
             updateCartDisplay();
             renderProducts();
-            alert('🗑 Корзина очищена');
+            alert('Корзина очищена');
         }
         
         function saveCart() {
@@ -334,7 +230,6 @@ def create_order():
     data = request.json
     print("📥 НОВЫЙ ЗАКАЗ:", data)
     
-    # Уведомление админу
     bot_token = os.environ.get("BOT_TOKEN")
     admin_id = os.environ.get("ADMIN_ID", "8504217011")
     
