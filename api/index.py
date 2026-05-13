@@ -14,9 +14,9 @@ temp_orders = {}
 order_counter = 1
 
 # Прямые ссылки на картинки (ImgBB)
-UC_IMAGE = "https://i.ibb.co/0jCbjpt4/uc.jpg"
-PP_IMAGE = "https://i.ibb.co/N287DRcq/pp.jpg"
-PRIME_IMAGE = "https://i.ibb.co/MD3pMxw7/prime.jpg"
+UC_IMAGE = "https://i.ibb.co/PHd6LDM/uc.jpg"
+PP_IMAGE = "https://i.ibb.co/zTkCcsbX/pp.jpg"
+PRIME_IMAGE = "https://i.ibb.co/8np0w8bN/prime.jpg"
 COSTUME1_IMAGE = "https://i.ibb.co/zH4pfW3y/costume1.jpg"
 COSTUME2_IMAGE = "https://i.ibb.co/RTj8grp4/costume2.jpg"
 
@@ -36,12 +36,12 @@ HTML = f'''<!DOCTYPE html>
         .tabs{{display:flex;gap:10px;margin-bottom:20px;background:rgba(255,255,255,0.05);padding:5px;border-radius:12px;}}
         .tab{{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}}
         .tab.active{{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a0033;}}
-        .section-image{{width:100%;border-radius:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);}}
         .product-card{{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);}}
         .product-card:hover{{background:rgba(255,255,255,0.1);border-color:#ffcc00;}}
-        .product-info h3{{font-size:18px;margin-bottom:5px;}}
-        .product-info .price{{color:#ffcc00;font-weight:bold;}}
-        .product-actions{{display:flex;align-items:center;}}
+        .product-info{{display:flex;align-items:center;gap:15px;}}
+        .product-icon{{width:50px;height:50px;border-radius:12px;object-fit:cover;}}
+        .product-details h3{{font-size:18px;margin-bottom:5px;}}
+        .product-details .price{{color:#ffcc00;font-weight:bold;}}
         .buy-btn,.select-btn{{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:8px 20px;border-radius:10px;color:#1a0033;font-weight:bold;cursor:pointer;font-size:14px;}}
         .buy-btn:hover,.select-btn:hover{{opacity:0.9;}}
         .cart-section{{background:rgba(0,0,0,0.5);border-radius:16px;padding:20px;margin-top:20px;border:1px solid rgba(255,204,0,0.3);}}
@@ -65,6 +65,8 @@ HTML = f'''<!DOCTYPE html>
         .footer{{text-align:center;padding:20px;font-size:12px;color:#b87dff;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}}
         .footer a{{color:#ffcc00;text-decoration:none;}}
         .hide{{display:none;}}
+        .costume-img{{width:50px;height:50px;border-radius:12px;object-fit:cover;}}
+        .costume-info{{display:flex;align-items:center;gap:15px;}}
     </style>
 </head>
 <body>
@@ -82,15 +84,12 @@ HTML = f'''<!DOCTYPE html>
         </div>
         
         <div id="tab-uc">
-            <img class="section-image" src="{UC_IMAGE}" alt="UC">
             <div id="uc-products"></div>
         </div>
         <div id="tab-pp" class="hide">
-            <img class="section-image" src="{PP_IMAGE}" alt="Популярность">
             <div id="pp-products"></div>
         </div>
         <div id="tab-prime" class="hide">
-            <img class="section-image" src="{PRIME_IMAGE}" alt="Подписки">
             <div id="prime-products"></div>
         </div>
         <div id="tab-costumes" class="hide">
@@ -139,47 +138,47 @@ HTML = f'''<!DOCTYPE html>
     <script>
         // ===== ВСЕ ТОВАРЫ =====
         
-        // UC ТОВАРЫ (15 штук)
+        // UC ТОВАРЫ (15 штук) с картинками
         const ucProducts = {{
-            "60": {{"name": "60 UC", "price": 87}},
-            "120": {{"name": "120 UC", "price": 152}},
-            "180": {{"name": "180 UC", "price": 223}},
-            "240": {{"name": "240 UC", "price": 293}},
-            "325": {{"name": "325 UC", "price": 387}},
-            "385": {{"name": "385 UC", "price": 434}},
-            "445": {{"name": "445 UC", "price": 482}},
-            "660": {{"name": "660 UC", "price": 756}},
-            "720": {{"name": "720 UC", "price": 771}},
-            "985": {{"name": "985 UC", "price": 1049}},
-            "1320": {{"name": "1320 UC", "price": 1401}},
-            "1800": {{"name": "1800 UC", "price": 1891}},
-            "3850": {{"name": "3850 UC", "price": 3753}},
-            "8100": {{"name": "8100 UC", "price": 7243}},
-            "9900": {{"name": "9900 UC", "price": 9790}}
+            "60": {{"name": "60 UC", "price": 87, "icon": "{UC_IMAGE}"}},
+            "120": {{"name": "120 UC", "price": 152, "icon": "{UC_IMAGE}"}},
+            "180": {{"name": "180 UC", "price": 223, "icon": "{UC_IMAGE}"}},
+            "240": {{"name": "240 UC", "price": 293, "icon": "{UC_IMAGE}"}},
+            "325": {{"name": "325 UC", "price": 387, "icon": "{UC_IMAGE}"}},
+            "385": {{"name": "385 UC", "price": 434, "icon": "{UC_IMAGE}"}},
+            "445": {{"name": "445 UC", "price": 482, "icon": "{UC_IMAGE}"}},
+            "660": {{"name": "660 UC", "price": 756, "icon": "{UC_IMAGE}"}},
+            "720": {{"name": "720 UC", "price": 771, "icon": "{UC_IMAGE}"}},
+            "985": {{"name": "985 UC", "price": 1049, "icon": "{UC_IMAGE}"}},
+            "1320": {{"name": "1320 UC", "price": 1401, "icon": "{UC_IMAGE}"}},
+            "1800": {{"name": "1800 UC", "price": 1891, "icon": "{UC_IMAGE}"}},
+            "3850": {{"name": "3850 UC", "price": 3753, "icon": "{UC_IMAGE}"}},
+            "8100": {{"name": "8100 UC", "price": 7243, "icon": "{UC_IMAGE}"}},
+            "9900": {{"name": "9900 UC", "price": 9790, "icon": "{UC_IMAGE}"}}
         }};
         
-        // ПП ТОВАРЫ (6 штук)
+        // ПП ТОВАРЫ (6 штук) с картинками
         const ppProducts = {{
-            "10000": {{"name": "10 000 ПП", "price": 152}},
-            "20000": {{"name": "20 000 ПП", "price": 289}},
-            "30000": {{"name": "30 000 ПП", "price": 424}},
-            "40000": {{"name": "40 000 ПП", "price": 561}},
-            "50000": {{"name": "50 000 ПП", "price": 696}},
-            "60000": {{"name": "60 000 ПП", "price": 833}}
+            "10000": {{"name": "10 000 ПП", "price": 152, "icon": "{PP_IMAGE}"}},
+            "20000": {{"name": "20 000 ПП", "price": 289, "icon": "{PP_IMAGE}"}},
+            "30000": {{"name": "30 000 ПП", "price": 424, "icon": "{PP_IMAGE}"}},
+            "40000": {{"name": "40 000 ПП", "price": 561, "icon": "{PP_IMAGE}"}},
+            "50000": {{"name": "50 000 ПП", "price": 696, "icon": "{PP_IMAGE}"}},
+            "60000": {{"name": "60 000 ПП", "price": 833, "icon": "{PP_IMAGE}"}}
         }};
         
-        // PRIME ПОДПИСКИ (4 штуки)
+        // PRIME ПОДПИСКИ (4 штуки) с картинками
         const primeProducts = {{
-            "1m": {{"name": "Prime (1 месяц)", "price": 125}},
-            "3m": {{"name": "Prime (3 месяца)", "price": 318}},
-            "6m": {{"name": "Prime (6 месяцев)", "price": 550}},
-            "12m": {{"name": "Prime (12 месяцев)", "price": 1027}}
+            "1m": {{"name": "Prime (1 месяц)", "price": 125, "icon": "{PRIME_IMAGE}"}},
+            "3m": {{"name": "Prime (3 месяца)", "price": 318, "icon": "{PRIME_IMAGE}"}},
+            "6m": {{"name": "Prime (6 месяцев)", "price": 550, "icon": "{PRIME_IMAGE}"}},
+            "12m": {{"name": "Prime (12 месяцев)", "price": 1027, "icon": "{PRIME_IMAGE}"}}
         }};
         
-        // X-КОСТЮМЫ (2 штуки) с картинками
+        // X-КОСТЮМЫ (2 штуки) с отдельными картинками
         const costumesProducts = {{
-            "1": {{"name": "🐦‍⬛ Ворон", "price": 4500, "image": "{COSTUME1_IMAGE}"}},
-            "2": {{"name": "🔥 Феникс", "price": 4500, "image": "{COSTUME2_IMAGE}"}}
+            "1": {{"name": "🐦‍⬛ Ворон", "price": 4500, "icon": "{COSTUME1_IMAGE}"}},
+            "2": {{"name": "🔥 Феникс", "price": 4500, "icon": "{COSTUME2_IMAGE}"}}
         }};
         
         const botUsername = "{BOT_USERNAME}";
@@ -192,7 +191,13 @@ HTML = f'''<!DOCTYPE html>
             let html = '';
             for (const [key, product] of Object.entries(ucProducts)) {{
                 html += '<div class="product-card">' +
-                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-info">' +
+                        '<img class="product-icon" src="' + product.icon + '" alt="icon">' +
+                        '<div class="product-details">' +
+                            '<h3>' + product.name + '</h3>' +
+                            '<div class="price">' + product.price + ' ₽</div>' +
+                        '</div>' +
+                    '</div>' +
                     '<div class="product-actions"><button class="buy-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Купить</button></div>' +
                 '</div>';
             }}
@@ -204,7 +209,13 @@ HTML = f'''<!DOCTYPE html>
             let html = '';
             for (const [key, product] of Object.entries(ppProducts)) {{
                 html += '<div class="product-card">' +
-                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-info">' +
+                        '<img class="product-icon" src="' + product.icon + '" alt="icon">' +
+                        '<div class="product-details">' +
+                            '<h3>' + product.name + '</h3>' +
+                            '<div class="price">' + product.price + ' ₽</div>' +
+                        '</div>' +
+                    '</div>' +
                     '<div class="product-actions"><button class="select-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
             }}
@@ -216,7 +227,13 @@ HTML = f'''<!DOCTYPE html>
             let html = '';
             for (const [key, product] of Object.entries(primeProducts)) {{
                 html += '<div class="product-card">' +
-                    '<div class="product-info"><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                    '<div class="product-info">' +
+                        '<img class="product-icon" src="' + product.icon + '" alt="icon">' +
+                        '<div class="product-details">' +
+                            '<h3>' + product.name + '</h3>' +
+                            '<div class="price">' + product.price + ' ₽</div>' +
+                        '</div>' +
+                    '</div>' +
                     '<div class="product-actions"><button class="select-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Выбрать</button></div>' +
                 '</div>';
             }}
@@ -229,9 +246,10 @@ HTML = f'''<!DOCTYPE html>
             for (const [key, product] of Object.entries(costumesProducts)) {{
                 html += '<div class="product-card">' +
                     '<div class="product-info">' +
-                        '<div style="display:flex;align-items:center;gap:15px;">' +
-                            '<img src="' + product.image + '" style="width:50px;height:50px;border-radius:10px;object-fit:cover;">' +
-                            '<div><h3>' + product.name + '</h3><div class="price">' + product.price + ' ₽</div></div>' +
+                        '<img class="product-icon" src="' + product.icon + '" alt="icon">' +
+                        '<div class="product-details">' +
+                            '<h3>' + product.name + '</h3>' +
+                            '<div class="price">' + product.price + ' ₽</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="product-actions"><button class="select-btn" onclick="addToCart(\\'' + key + '\\', \\'' + product.name + '\\', ' + product.price + ')">Выбрать</button></div>' +
@@ -337,7 +355,6 @@ def create_order():
     order_id = order_counter
     order_counter += 1
     
-    # Сохраняем заказ с деталями
     order_details = {
         'pubg_id': pubg_id,
         'items': items,
@@ -348,13 +365,10 @@ def create_order():
     }
     temp_orders[order_id] = order_details
     
-    # Отправляем уведомление админу с полной информацией
     if BOT_TOKEN:
         try:
             items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
-            total_text = f"\n\n💰 **ИТОГО: {total}₽**"
-            
-            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер заказа: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}{total_text}\n💳 Способ оплаты: {payment_method}"
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
             
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
@@ -363,8 +377,7 @@ def create_order():
                 "parse_mode": "Markdown"
             }
             requests.post(url, json=payload)
-            print(f"✅ Уведомление отправлено админу: Заказ #{order_id} на {total}₽")
-        except Exception as e:
-            print(f"❌ Ошибка отправки уведомления: {e}")
+        except:
+            pass
     
     return jsonify({'ok': True, 'order_id': order_id})
