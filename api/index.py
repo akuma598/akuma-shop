@@ -30,7 +30,6 @@ HTML = '''<!DOCTYPE html>
         .tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;transition:all 0.3s;font-size:14px;font-weight:bold;}
         .tab.active{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a1a2e;}
         .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);}
-        .product-card:hover{background:rgba(255,255,255,0.1);border-color:#ffcc00;}
         .product-info h3{font-size:18px;margin-bottom:5px;}
         .product-info .price{color:#ffcc00;font-weight:bold;}
         .product-actions{display:flex;align-items:center;gap:15px;}
@@ -116,8 +115,7 @@ HTML = '''<!DOCTYPE html>
     </div>
     
     <script>
-        // ВСЕ ТОВАРЫ
-        const productsData = {
+        var productsData = {
             uc: {
                 "60": {name: "60 UC", price: 87},
                 "120": {name: "120 UC", price: 152},
@@ -155,17 +153,18 @@ HTML = '''<!DOCTYPE html>
             }
         };
         
-        let cart = JSON.parse(localStorage.getItem('cart')) || {};
-        let selectedPayment = localStorage.getItem('selectedPayment') || null;
-        let currentTab = 'uc';
+        var cart = JSON.parse(localStorage.getItem('cart')) || {};
+        var selectedPayment = localStorage.getItem('selectedPayment') || null;
+        var currentTab = 'uc';
         
         function renderProducts() {
-            const container = document.getElementById('products-container');
-            const products = productsData[currentTab];
-            let html = '';
+            var container = document.getElementById('products-container');
+            var products = productsData[currentTab];
+            var html = '';
             
-            for (const [key, product] of Object.entries(products)) {
-                const qty = cart[key] ? cart[key].quantity : 0;
+            for (var key in products) {
+                var product = products[key];
+                var qty = cart[key] ? cart[key].quantity : 0;
                 
                 if (currentTab === 'uc') {
                     html += '<div class="product-card">' +
@@ -189,17 +188,24 @@ HTML = '''<!DOCTYPE html>
         }
         
         function updateQuantity(key, delta) {
-            if (!cart[key]) cart[key] = {name: productsData.uc[key].name, price: productsData.uc[key].price, quantity: 0};
-            let newQty = cart[key].quantity + delta;
-            if (newQty <= 0) delete cart[key];
-            else cart[key].quantity = newQty;
+            if (!cart[key]) {
+                cart[key] = {name: productsData.uc[key].name, price: productsData.uc[key].price, quantity: 0};
+            }
+            var newQty = cart[key].quantity + delta;
+            if (newQty <= 0) {
+                delete cart[key];
+            } else {
+                cart[key].quantity = newQty;
+            }
             saveCart();
             updateCartDisplay();
             renderProducts();
         }
         
         function addToCart(key, name, price) {
-            if (!cart[key]) cart[key] = {name: name, price: price, quantity: 0};
+            if (!cart[key]) {
+                cart[key] = {name: name, price: price, quantity: 0};
+            }
             cart[key].quantity++;
             saveCart();
             updateCartDisplay();
@@ -207,10 +213,11 @@ HTML = '''<!DOCTYPE html>
         }
         
         function updateCartDisplay() {
-            let total = 0;
-            let html = '';
-            for (const [key, item] of Object.entries(cart)) {
-                const itemTotal = item.price * item.quantity;
+            var total = 0;
+            var html = '';
+            for (var key in cart) {
+                var item = cart[key];
+                var itemTotal = item.price * item.quantity;
                 total += itemTotal;
                 html += '<div class="cart-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + itemTotal + ' ₽</span></div>';
             }
@@ -234,14 +241,20 @@ HTML = '''<!DOCTYPE html>
         function selectPayment(method) {
             selectedPayment = method;
             saveCart();
-            document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
-            document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('selected');
+            var btns = document.querySelectorAll('.payment-btn');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.remove('selected');
+            }
+            document.querySelector('.payment-btn[data-method="' + method + '"]').classList.add('selected');
         }
         
         function switchTab(tab) {
             currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+            var tabs = document.querySelectorAll('.tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            document.querySelector('.tab[data-tab="' + tab + '"]').classList.add('active');
             renderProducts();
         }
         
@@ -252,22 +265,24 @@ HTML = '''<!DOCTYPE html>
         }
         
         async function checkout() {
-            const pubgId = document.getElementById('pubg_id').value;
+            var pubgId = document.getElementById('pubg_id').value;
             if (!pubgId) { alert('❌ Введите PUBG ID'); return; }
             if (!pubgId.toString().startsWith('5') || pubgId.toString().length < 10) { alert('❌ PUBG ID должен начинаться с 5 (10+ цифр)'); return; }
             if (Object.keys(cart).length === 0) { alert('❌ Корзина пуста'); return; }
             if (!selectedPayment) { alert('❌ Выберите способ оплаты'); return; }
             
-            let total = 0;
-            for (const item of Object.values(cart)) total += item.price * item.quantity;
+            var total = 0;
+            for (var key in cart) {
+                total += cart[key].price * cart[key].quantity;
+            }
             
             try {
-                const response = await fetch('/create-order', {
+                var response = await fetch('/create-order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({pubg_id: pubgId, items: cart, total: total, payment_method: selectedPayment})
                 });
-                const data = await response.json();
+                var data = await response.json();
                 if (data.ok && data.order_id) {
                     showOrderModal(data.order_id, total);
                     cart = {};
@@ -275,7 +290,10 @@ HTML = '''<!DOCTYPE html>
                     updateCartDisplay();
                     renderProducts();
                     selectedPayment = null;
-                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
+                    var btns = document.querySelectorAll('.payment-btn');
+                    for (var i = 0; i < btns.length; i++) {
+                        btns[i].classList.remove('selected');
+                    }
                 } else {
                     alert('❌ Ошибка при создании заказа');
                 }
@@ -285,8 +303,8 @@ HTML = '''<!DOCTYPE html>
         }
         
         // Запуск
-        const urlParams = new URLSearchParams(window.location.search);
-        const section = urlParams.get('section');
+        var urlParams = new URLSearchParams(window.location.search);
+        var section = urlParams.get('section');
         if (section === 'uc') switchTab('uc');
         else if (section === 'pp') switchTab('pp');
         else if (section === 'prime') switchTab('prime');
@@ -294,7 +312,7 @@ HTML = '''<!DOCTYPE html>
         else switchTab('uc');
         
         if (selectedPayment) {
-            const btn = document.querySelector(`.payment-btn[data-method="${selectedPayment}"]`);
+            var btn = document.querySelector('.payment-btn[data-method="' + selectedPayment + '"]');
             if (btn) btn.classList.add('selected');
         }
     </script>
@@ -314,7 +332,7 @@ def create_order():
     total = data.get('total')
     payment_method = data.get('payment_method')
     
-    print(f"📥 НОВЫЙ ЗАКАЗ: pubg_id={pubg_id}, total={total}, payment={payment_method}")
+    print(f"📥 НОВЫЙ ЗАКАЗ: pubg_id={pubg_id}, total={total}")
     
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
