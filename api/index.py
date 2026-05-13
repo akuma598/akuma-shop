@@ -13,19 +13,32 @@ ADMIN_ID = os.environ.get("ADMIN_ID", "8504217011")
 temp_orders = {}
 order_counter = 1
 
-PRODUCTS = {
-    "60": {"amount": 60, "price": 78},
-    "120": {"amount": 120, "price": 141},
-    "180": {"amount": 180, "price": 204},
-    "240": {"amount": 240, "price": 267},
-    "325": {"amount": 325, "price": 356},
-    "385": {"amount": 385, "price": 419},
-    "445": {"amount": 445, "price": 482},
-    "660": {"amount": 660, "price": 708},
-    "720": {"amount": 720, "price": 771},
-    "985": {"amount": 985, "price": 1049},
-    "1320": {"amount": 1320, "price": 1401},
-    "1800": {"amount": 1800, "price": 1905}
+# Товары UC
+UC_PRODUCTS = {
+    "60": {"amount": "60 UC", "price": 72, "old_price": 80},
+    "325": {"amount": "325 UC", "price": 372, "old_price": 410},
+    "660": {"amount": "660 UC", "price": 741, "old_price": 820},
+    "1800": {"amount": "1800 UC", "price": 1876, "old_price": 2080},
+    "3850": {"amount": "3850 UC", "price": 3738, "old_price": 4150},
+    "8100": {"amount": "8100 UC", "price": 7228, "old_price": 8030}
+}
+
+# Товары ПП (Популярность)
+PP_PRODUCTS = {
+    "10000": {"amount": "10 000 ПП", "price": 137},
+    "20000": {"amount": "20 000 ПП", "price": 274},
+    "30000": {"amount": "30 000 ПП", "price": 409},
+    "40000": {"amount": "40 000 ПП", "price": 546},
+    "50000": {"amount": "50 000 ПП", "price": 681},
+    "60000": {"amount": "60 000 ПП", "price": 818}
+}
+
+# Подписки Prime
+PRIME_SUBSCRIPTIONS = {
+    "1m": {"name": "Prime (1 месяц)", "price": 110},
+    "3m": {"name": "Prime (3 месяца)", "price": 303},
+    "6m": {"name": "Prime (6 месяцев)", "price": 535},
+    "12m": {"name": "Prime (12 месяцев)", "price": 1012}
 }
 
 HTML = '''<!DOCTYPE html>
@@ -33,77 +46,355 @@ HTML = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Akuma UC Shop</title>
+    <title>NeoN UC BOT 24/7</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;padding:20px;}
-        .container{max-width:600px;margin:0 auto;}
-        .header{text-align:center;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px;}
-        .header h1{font-size:28px;background:linear-gradient(135deg,#ffcc00,#ff9900);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-        .header p{color:#888;font-size:14px;margin-top:5px;}
-        .id-section{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin-bottom:20px;}
-        .id-section label{display:block;margin-bottom:8px;font-size:14px;color:#ccc;}
-        .id-section input{width:100%;padding:14px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;font-size:16px;outline:none;}
-        .id-section input:focus{border-color:#ffcc00;}
-        .products{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:30px;}
-        .product-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;text-align:center;cursor:pointer;border:1px solid rgba(255,255,255,0.1);transition:all 0.2s;}
-        .product-card:hover{background:rgba(255,255,255,0.1);border-color:#ffcc00;transform:translateY(-2px);}
-        .product-amount{font-size:20px;font-weight:bold;color:#ffcc00;}
-        .product-price{font-size:14px;color:#aaa;margin-top:5px;}
-        .card-details{background:rgba(0,0,0,0.5);border-radius:16px;padding:20px;margin:20px 0;text-align:center;border:1px solid rgba(255,204,0,0.3);}
-        .card-details h3{color:#ffcc00;margin-bottom:15px;}
-        .card-number{font-size:22px;font-weight:bold;letter-spacing:2px;background:#1a1a2e;padding:12px;border-radius:12px;font-family:monospace;}
-        .pay-button{background:linear-gradient(135deg,#ffcc00,#ff9900);border:none;padding:16px;width:100%;border-radius:12px;color:#1a1a2e;font-size:18px;font-weight:bold;cursor:pointer;margin-top:20px;}
-        .info-box{background:rgba(255,204,0,0.1);padding:15px;border-radius:12px;margin:15px 0;text-align:left;border-left:3px solid #ffcc00;}
-        .info-box p{font-size:14px;margin:8px 0;line-height:1.4;}
-        .info-box strong{color:#ffcc00;}
-        .footer{text-align:center;padding:20px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:20px;}
-        .footer a{color:#ffcc00;text-decoration:none;}
-        .hidden{display:none;}
-        .back-link{text-align:center;margin-top:15px;}
-        .back-link a{color:#ffcc00;text-decoration:none;font-size:14px;}
-        @media (max-width:480px){.products{grid-template-columns:1fr;}}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 5px;
+            border-radius: 12px;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #1a1a2e;
+        }
+        
+        .product-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+        
+        .product-card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: #ffcc00;
+        }
+        
+        .product-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .product-info .price {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        
+        .product-info .old-price {
+            color: #888;
+            font-size: 12px;
+            text-decoration: line-through;
+            margin-left: 10px;
+        }
+        
+        .product-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quantity-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quantity-btn:hover {
+            background: #ffcc00;
+            color: #1a1a2e;
+        }
+        
+        .quantity {
+            font-size: 16px;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .select-btn {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 10px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .select-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .cart-section {
+            background: rgba(0,0,0,0.5);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(255,204,0,0.3);
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .cart-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+            color: #ffcc00;
+        }
+        
+        .pubg-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .pubg-section input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .payment-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .payment-btn:hover, .payment-btn.selected {
+            border-color: #ffcc00;
+            background: rgba(255,204,0,0.1);
+        }
+        
+        .payment-btn.selected {
+            border-color: #ffcc00;
+            background: rgba(255,204,0,0.2);
+        }
+        
+        .payment-btn .method-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .payment-btn .method-desc {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        .checkout-btn {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            border: none;
+            padding: 16px;
+            width: 100%;
+            border-radius: 12px;
+            color: #1a1a2e;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 20px;
+        }
+        
+        .footer a {
+            color: #ffcc00;
+            text-decoration: none;
+        }
+        
+        .hide {
+            display: none;
+        }
+        
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .clear-cart {
+            background: rgba(255,0,0,0.2);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .clear-cart:hover {
+            background: rgba(255,0,0,0.3);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 AKUMA UC SHOP</h1>
-            <p>Быстрая покупка UC | 24/7</p>
+            <h1>🔥 NeoN UC BOT 24/7</h1>
+            <p>Быстрая покупка UC | 24/7 | Мгновенная выдача</p>
         </div>
         
-        <div id="order-form">
-            <div class="id-section">
-                <label>🎮 Введите ваш PUBG ID (начинается с 5):</label>
-                <input type="number" id="pubg_id" placeholder="Например: 51867875896" autocomplete="off">
-            </div>
-            <div class="products" id="products"></div>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('uc')">UC</div>
+            <div class="tab" onclick="switchTab('pp')">Популярность</div>
+            <div class="tab" onclick="switchTab('prime')">Подписки</div>
+            <div class="tab" onclick="switchTab('costumes')">X-костюмы</div>
         </div>
         
-        <div id="payment-info" class="hidden">
-            <div class="card-details">
-                <h3>💳 РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</h3>
-                <p>1️⃣ Переведите точную сумму на карту:</p>
-                <div class="card-number">**** **** **** 1234</div>
-                <p style="margin-top: 10px;">Получатель: <strong>АКУМА</strong></p>
-                <p style="font-size: 12px; color: #888; margin-top: 15px;">💰 Сумма к оплате: <strong id="pay-amount">0</strong> ₽</p>
-                
-                <div class="info-box">
-                    <p>📌 <strong>ПОСЛЕ ПЕРЕВОДА:</strong></p>
-                    <p>2️⃣ <strong>Нажмите кнопку «✅ Я ОПЛАТИЛ»</strong> → вас автоматически перекинет в Telegram бота</p>
-                    <p>3️⃣ <strong>В боте нажмите «Отправить»</strong> — заказ будет принят</p>
-                </div>
-                
-                <button class="pay-button" onclick="confirmPayment()">✅ Я ОПЛАТИЛ</button>
-                
-                <p style="font-size: 12px; color: #888; margin-top: 15px;">
-                    ⚠️ Если бот не открылся автоматически — <a href="https://t.me/akuma_ucbot" target="_blank" style="color:#ffcc00;">нажмите сюда</a>
-                </p>
+        <div id="tab-uc">
+            <div id="uc-products"></div>
+        </div>
+        
+        <div id="tab-pp" class="hide">
+            <div id="pp-products"></div>
+        </div>
+        
+        <div id="tab-prime" class="hide">
+            <div id="prime-products"></div>
+        </div>
+        
+        <div id="tab-costumes" class="hide">
+            <div id="costumes-products"></div>
+        </div>
+        
+        <div class="cart-section">
+            <div class="cart-header">
+                <h3>🛒 Корзина</h3>
+                <button class="clear-cart" onclick="clearCart()">Очистить</button>
             </div>
-            <div class="back-link">
-                <a href="#" onclick="backToCatalog(); return false;">◀️ Назад к выбору товара</a>
+            <div id="cart-items"></div>
+            <div id="cart-total" class="cart-total">Итого: 0 ₽</div>
+        </div>
+        
+        <div class="pubg-section">
+            <input type="number" id="pubg_id" placeholder="Введите PUBG ID получателя (начинается с 5)">
+        </div>
+        
+        <div class="payment-methods" id="payment-methods">
+            <div class="payment-btn" onclick="selectPayment('sbp1')" data-method="sbp1">
+                <div class="method-name">💳 СБП №1</div>
+                <div class="method-desc">система быстрых платежей</div>
+            </div>
+            <div class="payment-btn" onclick="selectPayment('sbp2')" data-method="sbp2">
+                <div class="method-name">💳 СБП №2</div>
+                <div class="method-desc">система быстрых платежей</div>
+            </div>
+            <div class="payment-btn" onclick="selectPayment('card1')" data-method="card1">
+                <div class="method-name">💳 Карта №1</div>
+                <div class="method-desc">МИР VISA Mastercard</div>
+            </div>
+            <div class="payment-btn" onclick="selectPayment('card2')" data-method="card2">
+                <div class="method-name">💳 Карта №2</div>
+                <div class="method-desc">МИР VISA Mastercard</div>
             </div>
         </div>
+        
+        <button class="checkout-btn" onclick="checkout()">Купить</button>
         
         <div class="footer">
             <p>Вопросы: <a href="https://t.me/aakumma">@aakumma</a></p>
@@ -111,43 +402,190 @@ HTML = '''<!DOCTYPE html>
     </div>
     
     <script>
-        const products = {
-            "60": {"amount": 60, "price": 78},
-            "120": {"amount": 120, "price": 141},
-            "180": {"amount": 180, "price": 204},
-            "240": {"amount": 240, "price": 267},
-            "325": {"amount": 325, "price": 356},
-            "385": {"amount": 385, "price": 419},
-            "445": {"amount": 445, "price": 482},
-            "660": {"amount": 660, "price": 708},
-            "720": {"amount": 720, "price": 771},
-            "985": {"amount": 985, "price": 1049},
-            "1320": {"amount": 1320, "price": 1401},
-            "1800": {"amount": 1800, "price": 1905}
+        const ucProducts = {
+            "60": {"name": "60 UC", "price": 72, "oldPrice": 80},
+            "325": {"name": "325 UC", "price": 372, "oldPrice": 410},
+            "660": {"name": "660 UC", "price": 741, "oldPrice": 820},
+            "1800": {"name": "1800 UC", "price": 1876, "oldPrice": 2080},
+            "3850": {"name": "3850 UC", "price": 3738, "oldPrice": 4150},
+            "8100": {"name": "8100 UC", "price": 7228, "oldPrice": 8030}
         };
-        const botUsername = "akuma_ucbot";
-        let currentAmount = null;
-        let currentPrice = null;
-        let currentPubgId = null;
         
-        function renderProducts() {
-            const container = document.getElementById('products');
+        const ppProducts = {
+            "10000": {"name": "10 000 ПП", "price": 137},
+            "20000": {"name": "20 000 ПП", "price": 274},
+            "30000": {"name": "30 000 ПП", "price": 409},
+            "40000": {"name": "40 000 ПП", "price": 546},
+            "50000": {"name": "50 000 ПП", "price": 681},
+            "60000": {"name": "60 000 ПП", "price": 818}
+        };
+        
+        const primeProducts = {
+            "1m": {"name": "Prime (1 месяц)", "price": 110},
+            "3m": {"name": "Prime (3 месяца)", "price": 303},
+            "6m": {"name": "Prime (6 месяцев)", "price": 535},
+            "12m": {"name": "Prime (12 месяцев)", "price": 1012}
+        };
+        
+        const costumesProducts = {
+            "1": {"name": "X-КОСТЮМ Огненный демон", "price": 500},
+            "2": {"name": "X-КОСТЮМ Ледяной дракон", "price": 550},
+            "3": {"name": "X-КОСТЮМ Призрачный убийца", "price": 600}
+        };
+        
+        let cart = {};
+        let selectedPayment = null;
+        
+        function renderUCProducts() {
+            const container = document.getElementById('uc-products');
             let html = '';
-            for (const [key, product] of Object.entries(products)) {
-                html += '<div class="product-card" onclick="selectProduct(' + key + ')">' +
-                            '<div class="product-amount">' + product.amount + ' UC</div>' +
-                            '<div class="product-price">' + product.price + ' ₽</div>' +
-                        '</div>';
+            for (const [key, product] of Object.entries(ucProducts)) {
+                html += '<div class="product-card">' +
+                    '<div class="product-info">' +
+                        '<h3>' + product.name + '</h3>' +
+                        '<div><span class="price">' + product.price + ' ₽</span>' +
+                        '<span class="old-price">' + product.oldPrice + ' ₽</span></div>' +
+                    '</div>' +
+                    '<div class="product-actions">' +
+                        '<div class="quantity-control">' +
+                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', -1)">-</button>' +
+                            '<span class="quantity" id="qty-' + key + '">' + (cart[key] ? cart[key].quantity : 0) + '</span>' +
+                            '<button class="quantity-btn" onclick="updateQuantity(\'' + key + '\', 1)">+</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
             }
             container.innerHTML = html;
         }
         
-        function selectProduct(amount) {
+        function renderPPProducts() {
+            const container = document.getElementById('pp-products');
+            let html = '';
+            for (const [key, product] of Object.entries(ppProducts)) {
+                html += '<div class="product-card">' +
+                    '<div class="product-info">' +
+                        '<h3>' + product.name + '</h3>' +
+                        '<div><span class="price">' + product.price + ' ₽</span></div>' +
+                    '</div>' +
+                    '<div class="product-actions">' +
+                        '<button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+        
+        function renderPrimeProducts() {
+            const container = document.getElementById('prime-products');
+            let html = '';
+            for (const [key, product] of Object.entries(primeProducts)) {
+                html += '<div class="product-card">' +
+                    '<div class="product-info">' +
+                        '<h3>' + product.name + '</h3>' +
+                        '<div><span class="price">' + product.price + ' ₽</span></div>' +
+                    '</div>' +
+                    '<div class="product-actions">' +
+                        '<button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+        
+        function renderCostumesProducts() {
+            const container = document.getElementById('costumes-products');
+            let html = '';
+            for (const [key, product] of Object.entries(costumesProducts)) {
+                html += '<div class="product-card">' +
+                    '<div class="product-info">' +
+                        '<h3>' + product.name + '</h3>' +
+                        '<div><span class="price">' + product.price + ' ₽</span></div>' +
+                    '</div>' +
+                    '<div class="product-actions">' +
+                        '<button class="select-btn" onclick="addToCart(\'' + key + '\', \'' + product.name + '\', ' + product.price + ')">Выбрать</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+        
+        function updateQuantity(key, delta) {
+            if (!cart[key]) {
+                cart[key] = {name: ucProducts[key].name, price: ucProducts[key].price, quantity: 0};
+            }
+            let newQty = cart[key].quantity + delta;
+            if (newQty <= 0) {
+                delete cart[key];
+            } else {
+                cart[key].quantity = newQty;
+            }
+            updateCartDisplay();
+            renderUCProducts();
+        }
+        
+        function addToCart(key, name, price) {
+            if (!cart[key]) {
+                cart[key] = {name: name, price: price, quantity: 0};
+            }
+            cart[key].quantity++;
+            updateCartDisplay();
+            alert('✅ ' + name + ' добавлен в корзину');
+        }
+        
+        function updateCartDisplay() {
+            const container = document.getElementById('cart-items');
+            let total = 0;
+            let html = '';
+            
+            for (const [key, item] of Object.entries(cart)) {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                html += '<div class="cart-item">' +
+                    '<span>' + item.name + ' x' + item.quantity + '</span>' +
+                    '<span>' + itemTotal + ' ₽</span>' +
+                '</div>';
+            }
+            
+            if (Object.keys(cart).length === 0) {
+                html = '<div style="text-align:center;color:#888;">Корзина пуста</div>';
+            }
+            
+            container.innerHTML = html;
+            document.getElementById('cart-total').innerHTML = 'Итого: ' + total + ' ₽';
+        }
+        
+        function clearCart() {
+            cart = {};
+            updateCartDisplay();
+            renderUCProducts();
+            alert('🗑 Корзина очищена');
+        }
+        
+        function selectPayment(method) {
+            selectedPayment = method;
+            document.querySelectorAll('.payment-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('selected');
+        }
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            
+            document.getElementById('tab-uc').classList.add('hide');
+            document.getElementById('tab-pp').classList.add('hide');
+            document.getElementById('tab-prime').classList.add('hide');
+            document.getElementById('tab-costumes').classList.add('hide');
+            
+            document.getElementById(`tab-${tab}`).classList.remove('hide');
+        }
+        
+        async function checkout() {
             const pubgId = document.getElementById('pubg_id').value;
             
             if (!pubgId) {
-                alert('❌ Введите PUBG ID');
-                document.getElementById('pubg_id').focus();
+                alert('❌ Введите PUBG ID получателя');
                 return;
             }
             
@@ -156,33 +594,33 @@ HTML = '''<!DOCTYPE html>
                 return;
             }
             
-            const product = products[amount];
-            if (!product) return;
-            
-            currentAmount = product.amount;
-            currentPrice = product.price;
-            currentPubgId = pubgId;
-            
-            document.getElementById('pay-amount').innerText = currentPrice;
-            document.getElementById('order-form').classList.add('hidden');
-            document.getElementById('payment-info').classList.remove('hidden');
-        }
-        
-        async function confirmPayment() {
-            if (!currentPubgId || !currentAmount || !currentPrice) {
-                alert('❌ Ошибка: данные не найдены');
+            if (Object.keys(cart).length === 0) {
+                alert('❌ Корзина пуста');
                 return;
             }
+            
+            if (!selectedPayment) {
+                alert('❌ Выберите способ оплаты');
+                return;
+            }
+            
+            let total = 0;
+            for (const item of Object.values(cart)) {
+                total += item.price * item.quantity;
+            }
+            
+            const orderData = {
+                pubg_id: pubgId,
+                items: cart,
+                total: total,
+                payment_method: selectedPayment
+            };
             
             try {
                 const response = await fetch('/create-order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        pubg_id: currentPubgId,
-                        amount: currentAmount.toString(),
-                        price: currentPrice
-                    })
+                    body: JSON.stringify(orderData)
                 });
                 
                 const data = await response.json();
@@ -193,20 +631,15 @@ HTML = '''<!DOCTYPE html>
                     alert('❌ Ошибка при создании заказа');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Ошибка сервера. Попробуйте позже.');
+                alert('❌ Ошибка сервера');
             }
         }
         
-        function backToCatalog() {
-            document.getElementById('order-form').classList.remove('hidden');
-            document.getElementById('payment-info').classList.add('hidden');
-            currentAmount = null;
-            currentPrice = null;
-            currentPubgId = null;
-        }
-        
-        renderProducts();
+        renderUCProducts();
+        renderPPProducts();
+        renderPrimeProducts();
+        renderCostumesProducts();
+        updateCartDisplay();
     </script>
 </body>
 </html>'''
@@ -220,10 +653,11 @@ def create_order():
     global order_counter
     data = request.json
     pubg_id = data.get('pubg_id')
-    amount = data.get('amount')
-    price = data.get('price')
+    items = data.get('items')
+    total = data.get('total')
+    payment_method = data.get('payment_method')
     
-    if not pubg_id or not amount:
+    if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
     
     order_id = order_counter
@@ -231,19 +665,20 @@ def create_order():
     
     temp_orders[order_id] = {
         'pubg_id': pubg_id,
-        'amount': amount,
-        'price': price,
+        'items': items,
+        'total': total,
+        'payment_method': payment_method,
         'status': 'pending',
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    # Отправляем уведомление админу
     if BOT_TOKEN:
         try:
+            items_text = '\n'.join([f"{item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
                 "chat_id": ADMIN_ID,
-                "text": f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 UC: {amount}\n💰 Сумма: {price}₽",
+                "text": f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 Товары:\n{items_text}\n💰 Итого: {total}₽\n💳 Оплата: {payment_method}",
                 "parse_mode": "Markdown"
             }
             requests.post(url, json=payload)
