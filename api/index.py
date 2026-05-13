@@ -13,14 +13,14 @@ ADMIN_ID = os.environ.get("ADMIN_ID", "8504217011")
 temp_orders = {}
 order_counter = 1
 
-# ID картинок (file_id)
+# ===== ID КАРТИНОК (из ваших сообщений) =====
 UC_IMAGE = "AgACAgIAAxkBAAEpH_RqBA2vvfInrAAB2cuLTUv2Y4DWKvUAAtcUaxv_-CFIWx3Af8eflaIBAAMCAAN4AAM7BA"
 PP_IMAGE = "AgACAgIAAxkBAAEpH_ZqBA3FZt5BaW8pOpj769e_C5y8xgAC2BRrG__4IUjQZtN17OtlEwEAAwIAA3gAAzsE"
 PRIME_IMAGE = "AgACAgIAAxkBAAEpH_hqBA3TAU1b0eAoyBWcGcf2-i0KDwAC2RRrG__4IUhl2i_0P5uuWwEAAwIAA3MAAzsE"
 COSTUME1_IMAGE = "AgACAgIAAxkBAAEpH_xqBA58yWfiNOx6mHN-I0qONkbMegAC3hRrG__4IUh-a9DIQamflgEAAwIAA3MAAzsE"
 COSTUME2_IMAGE = "AgACAgIAAxkBAAEpH_5qBA6UBNCsgo4zZ-DDSwadDs9iHgAC4RRrG__4IUj1Wbn6yP2wVgEAAwIAA3MAAzsE"
 
-# Функция для получения ссылки на картинку через Telegram Bot API
+# Функция для получения прямой ссылки на картинку через Telegram API
 def get_image_url(file_id):
     if not BOT_TOKEN:
         return ""
@@ -44,11 +44,20 @@ COSTUME2_IMAGE_URL = get_image_url(COSTUME2_IMAGE)
 # Товары UC
 UC_PRODUCTS = {
     "60": {"name": "60 UC", "price": 87},
+    "120": {"name": "120 UC", "price": 152},
+    "180": {"name": "180 UC", "price": 223},
+    "240": {"name": "240 UC", "price": 293},
     "325": {"name": "325 UC", "price": 387},
+    "385": {"name": "385 UC", "price": 434},
+    "445": {"name": "445 UC", "price": 482},
     "660": {"name": "660 UC", "price": 756},
+    "720": {"name": "720 UC", "price": 771},
+    "985": {"name": "985 UC", "price": 1049},
+    "1320": {"name": "1320 UC", "price": 1401},
     "1800": {"name": "1800 UC", "price": 1891},
     "3850": {"name": "3850 UC", "price": 3753},
-    "8100": {"name": "8100 UC", "price": 7243}
+    "8100": {"name": "8100 UC", "price": 7243},
+    "9900": {"name": "9900 UC", "price": 9790}
 }
 
 # Товары ПП (Популярность)
@@ -193,7 +202,7 @@ HTML = f'''<!DOCTYPE html>
         const ucProducts = {json.dumps(UC_PRODUCTS)};
         const ppProducts = {json.dumps(PP_PRODUCTS)};
         const primeProducts = {json.dumps(PRIME_PRODUCTS)};
-        const costumesProducts = {json.dumps({k: {"name": v["name"], "price": v["price"]} for k, v in COSTUMES_PRODUCTS.items()})};
+        const costumesProducts = {json.dumps({k: {{"name": v["name"], "price": v["price"]}} for k, v in COSTUMES_PRODUCTS.items()})};
         const botUsername = "{BOT_USERNAME}";
         
         let cart = {{}};
