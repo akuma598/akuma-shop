@@ -131,13 +131,14 @@ HTML = f'''<!DOCTYPE html>
             cursor: pointer;
             font-size: 14px;
             margin-top: 10px;
+            width: 100%;
         }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 NeoN UC BOT 24/7</h1>
+            <h1>🔥 Akuma UC BOT 24/7</h1>
             <p>Быстрая покупка UC | 24/7 | Мгновенная выдача</p>
         </div>
         
@@ -201,6 +202,9 @@ HTML = f'''<!DOCTYPE html>
             <div class="total" id="modalTotal">0 ₽</div>
             <button class="copy-btn" onclick="copyOrderId()">📋 Скопировать номер заказа</button>
             <button class="modal-btn" onclick="goToBot()">📱 Перейти в бота для оплаты</button>
+            <p style="font-size: 11px; color: #b87dff; margin-top: 15px;">
+                💡 Если бот не открылся — нажмите три точки (⋮) → «Открыть в браузере»
+            </p>
         </div>
     </div>
     
@@ -370,6 +374,10 @@ HTML = f'''<!DOCTYPE html>
         }}
         
         function goToBot() {{
+            // Закрываем текущее окно/вкладку
+            window.close();
+            
+            // Открываем бота
             window.location.href = 'https://t.me/' + botUsername;
         }}
         
@@ -433,9 +441,6 @@ def create_order():
     total = data.get('total')
     payment_method = data.get('payment_method')
     
-    print(f"📥 Получен запрос: pubg_id={pubg_id}, total={total}, payment={payment_method}")
-    print(f"📦 Товары: {items}")
-    
     if not pubg_id or not items:
         return jsonify({'error': 'Missing data'}), 400
     
@@ -451,11 +456,10 @@ def create_order():
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    # Отправляем уведомление админу
     if BOT_TOKEN:
         try:
             items_text = '\n'.join([f"• {item['name']} x{item['quantity']} = {item['price'] * item['quantity']}₽" for item in items.values()])
-            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 Номер: #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
+            admin_text = f"🆕 **НОВЫЙ ЗАКАЗ С САЙТА**\n\n🆔 #{order_id}\n🎮 PUBG ID: {pubg_id}\n📦 **Товары:**\n{items_text}\n\n💰 **ИТОГО: {total}₽**\n💳 Оплата: {payment_method}"
             
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             payload = {
@@ -463,9 +467,8 @@ def create_order():
                 "text": admin_text,
                 "parse_mode": "Markdown"
             }
-            response = requests.post(url, json=payload)
-            print(f"✅ Уведомление админу отправлено: {response.status_code}")
+            requests.post(url, json=payload)
         except Exception as e:
-            print(f"❌ Ошибка отправки уведомления: {e}")
+            print(f"Ошибка: {e}")
     
     return jsonify({'ok': True, 'order_id': order_id})
