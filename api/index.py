@@ -123,7 +123,6 @@ def create_order():
     data = request.json
     print("ЗАКАЗ:", data)
     
-    # Уведомление админу
     bot_token = os.environ.get("BOT_TOKEN")
     admin_id = os.environ.get("ADMIN_ID", "8504217011")
     
