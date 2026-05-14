@@ -70,7 +70,10 @@ HTML = '''<!DOCTYPE html>
             {name: "720 UC", price: 771},
             {name: "985 UC", price: 1049},
             {name: "1320 UC", price: 1401},
-            {name: "1800 UC", price: 1891}
+            {name: "1800 UC", price: 1891},
+            {name: "3850 UC", price: 3753},
+            {name: "8100 UC", price: 7243},
+            {name: "9900 UC", price: 9790}
         ];
         
         function buy(name, price) {
