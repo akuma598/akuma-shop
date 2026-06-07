@@ -117,6 +117,7 @@ HTML = '''<!DOCTYPE html>
             white-space: nowrap;
             font-family: monospace;
             pointer-events: none;
+            display: none;
         }
     </style>
 </head>
@@ -126,7 +127,7 @@ HTML = '''<!DOCTYPE html>
     <div id="health">❤️ 100</div>
     <div id="controls">🖱️ МЫШЬ — ДВИЖЕНИЕ | 🔫 ЛКМ — СТРЕЛЬБА</div>
     <button class="start-btn" id="startBtn">🚀 НАЧАТЬ ИГРУ</button>
-    <div class="status" id="status" style="display:none;"></div>
+    <div class="status" id="status"></div>
     
     <script type="importmap">
         {
@@ -157,7 +158,7 @@ HTML = '''<!DOCTYPE html>
         
         // Камера
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 5, 15);
+        camera.position.set(0, 3, 12);
         camera.lookAt(0, 0, 0);
         
         // Рендер
@@ -248,7 +249,6 @@ HTML = '''<!DOCTYPE html>
         // Класс врага
         class Enemy {
             constructor() {
-                const size = 0.6;
                 const group = new THREE.Group();
                 
                 const bodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.6, 6);
@@ -277,7 +277,6 @@ HTML = '''<!DOCTYPE html>
                 scene.add(group);
                 this.mesh = group;
                 this.speed = 0.08 + Math.random() * 0.07;
-                this.health = 1;
             }
             
             update() {
@@ -287,43 +286,30 @@ HTML = '''<!DOCTYPE html>
             destroy() {
                 scene.remove(this.mesh);
                 // Взрыв
-                const particles = [];
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < 15; i++) {
                     const particle = new THREE.Mesh(
                         new THREE.SphereGeometry(0.05, 3, 3),
                         new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff3300 })
                     );
                     particle.position.copy(this.mesh.position);
                     scene.add(particle);
-                    particles.push({ mesh: particle, life: 30, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, vz: (Math.random() - 0.5) * 0.3 });
+                    setTimeout(() => scene.remove(particle), 300);
                 }
-                setTimeout(() => {
-                    particles.forEach(p => scene.remove(p.mesh));
-                }, 500);
             }
         }
         
         class Bullet {
-            constructor(x, y, z, targetX, targetY) {
+            constructor(x, y, z) {
                 const geometry = new THREE.SphereGeometry(0.08, 6, 6);
                 const material = new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xff6600 });
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.set(x, y, z);
                 scene.add(this.mesh);
-                
-                // Направление на цель
-                const dx = targetX - x;
-                const dz = targetY - z;
-                const len = Math.sqrt(dx*dx + dz*dz);
-                this.vx = (dx / len) * bulletSpeed;
-                this.vz = (dz / len) * bulletSpeed;
-                this.vy = 0;
+                this.vz = -bulletSpeed;
             }
             
             update() {
-                this.mesh.position.x += this.vx;
                 this.mesh.position.z += this.vz;
-                this.mesh.position.y += this.vy;
             }
             
             destroy() {
@@ -335,16 +321,14 @@ HTML = '''<!DOCTYPE html>
             if (!gameRunning) return;
             const bullet = new Bullet(
                 playerGroup.position.x,
-                playerGroup.position.y + 0.3,
-                playerGroup.position.z - 0.5,
-                mouseX * 10,
-                mouseY * 5 - 2
+                playerGroup.position.y + 0.2,
+                playerGroup.position.z - 0.8
             );
             bullets.push(bullet);
         }
         
         function spawnEnemy() {
-            if (enemies.length < 12) {
+            if (enemies.length < 10) {
                 enemies.push(new Enemy());
             }
         }
@@ -354,7 +338,7 @@ HTML = '''<!DOCTYPE html>
             
             // Движение игрока за мышкой
             targetX = (mouseX / window.innerWidth) * 12 - 6;
-            targetY = -(mouseY / window.innerHeight) * 6 + 3;
+            targetY = -(mouseY / window.innerHeight) * 5 + 2.5;
             playerGroup.position.x += (targetX - playerGroup.position.x) * 0.1;
             playerGroup.position.y += (targetY - playerGroup.position.y) * 0.1;
             playerGroup.position.x = Math.min(Math.max(playerGroup.position.x, -5.5), 5.5);
@@ -373,8 +357,7 @@ HTML = '''<!DOCTYPE html>
             // Пули
             for (let i = 0; i < bullets.length; i++) {
                 bullets[i].update();
-                if (bullets[i].mesh.position.z > 20 || bullets[i].mesh.position.z < -25 ||
-                    Math.abs(bullets[i].mesh.position.x) > 15) {
+                if (bullets[i].mesh.position.z < -15) {
                     bullets[i].destroy();
                     bullets.splice(i, 1);
                     i--;
@@ -426,7 +409,7 @@ HTML = '''<!DOCTYPE html>
             }
             
             // Спавн врагов
-            if (enemies.length < 5) {
+            if (enemies.length < 4) {
                 enemySpawnCounter++;
                 if (enemySpawnCounter > enemySpawnDelay) {
                     spawnEnemy();
@@ -439,7 +422,7 @@ HTML = '''<!DOCTYPE html>
             stars.rotation.y += 0.001;
             stars.rotation.x += 0.0005;
             
-            // Камера слегка следует за игроком
+            // Камера
             camera.position.x += (playerGroup.position.x * 0.3 - camera.position.x) * 0.05;
             camera.position.y += (playerGroup.position.y * 0.2 - camera.position.y) * 0.05;
             camera.lookAt(playerGroup.position.x * 0.5, playerGroup.position.y * 0.5, 0);
@@ -457,11 +440,11 @@ HTML = '''<!DOCTYPE html>
             mouseY = e.clientY;
         });
         
-        canvas.addEventListener('click', (e) => {
+        document.addEventListener('click', (e) => {
             if (!gameRunning) return;
             if (shootCooldown <= 0) {
                 shoot();
-                shootCooldown = 10;
+                shootCooldown = 12;
             }
         });
         
@@ -499,9 +482,6 @@ HTML = '''<!DOCTYPE html>
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        
-        // Небольшая инструкция
-        console.log('3D Space Fighter готов!');
     </script>
 </body>
 </html>'''
