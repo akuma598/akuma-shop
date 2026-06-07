@@ -7,8 +7,8 @@ HTML = '''<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Space Fighter | 3D Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Counter-Strike | 3D Shooter</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@ HTML = '''<!DOCTYPE html>
         }
         
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Courier New', monospace;
             background: #000;
         }
         
@@ -33,22 +33,22 @@ HTML = '''<!DOCTYPE html>
             justify-content: space-between;
             z-index: 100;
             pointer-events: none;
-            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
         }
         
         .ui-box {
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px);
             padding: 8px 20px;
-            border-radius: 30px;
-            border: 1px solid rgba(255,204,0,0.3);
+            border-radius: 8px;
+            border-left: 3px solid #ffcc00;
+            font-family: monospace;
         }
         
         .ui-box span {
             color: #ffcc00;
             font-size: 28px;
             font-weight: bold;
-            font-family: monospace;
         }
         
         .ui-box p {
@@ -57,37 +57,75 @@ HTML = '''<!DOCTYPE html>
             margin-top: 2px;
         }
         
-        #health-bar-container {
+        #health-container {
             position: absolute;
             bottom: 30px;
             left: 20px;
-            right: 20px;
-            height: 8px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border-left: 3px solid #ff4444;
             z-index: 100;
-            overflow: hidden;
         }
         
-        #health-bar {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #ff4444, #ffcc00);
-            border-radius: 10px;
-            transition: width 0.3s;
+        #health {
+            color: #ff4444;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: monospace;
         }
         
-        .controls-hint {
+        #ammo {
             position: absolute;
-            bottom: 50px;
+            bottom: 30px;
             right: 20px;
-            color: #888;
-            font-size: 10px;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 12px;
-            border-radius: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 20px;
+            border-radius: 8px;
+            border-right: 3px solid #ffcc00;
             z-index: 100;
+            font-family: monospace;
+            text-align: right;
+        }
+        
+        #ammo span {
+            color: #ffcc00;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            z-index: 200;
             pointer-events: none;
+        }
+        
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        #crosshair::before {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+        
+        #crosshair::after {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            transform: translateX(-50%);
         }
         
         .start-btn {
@@ -97,16 +135,16 @@ HTML = '''<!DOCTYPE html>
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #ffcc00, #ff9900);
             border: none;
-            padding: 18px 50px;
-            border-radius: 60px;
+            padding: 15px 40px;
+            border-radius: 8px;
             color: #1a1a2e;
             font-weight: bold;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
-            z-index: 200;
+            z-index: 300;
             font-family: monospace;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 0 30px rgba(255,204,0,0.5);
+            transition: transform 0.2s;
+            box-shadow: 0 0 20px rgba(255,204,0,0.5);
         }
         
         .start-btn:active {
@@ -121,21 +159,37 @@ HTML = '''<!DOCTYPE html>
             color: white;
             font-size: 20px;
             text-align: center;
-            z-index: 200;
+            z-index: 300;
             background: rgba(0,0,0,0.8);
             padding: 15px 30px;
-            border-radius: 20px;
+            border-radius: 8px;
             font-family: monospace;
             pointer-events: none;
             display: none;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,204,0,0.5);
+            border: 1px solid #ffcc00;
+        }
+        
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888;
+            font-size: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 12px;
+            border-radius: 20px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
         }
         
         @media (max-width: 768px) {
-            .ui-box span { font-size: 22px; }
+            .ui-box span { font-size: 20px; }
             .ui-box { padding: 5px 15px; }
-            .start-btn { padding: 14px 35px; font-size: 18px; }
+            #health { font-size: 18px; }
+            #ammo span { font-size: 18px; }
         }
     </style>
 </head>
@@ -143,18 +197,23 @@ HTML = '''<!DOCTYPE html>
     <div id="ui">
         <div class="ui-box">
             <span id="score">0</span>
-            <p>ОЧКИ</p>
+            <p>УНИЧТОЖЕНО</p>
         </div>
         <div class="ui-box">
             <span id="kills">0</span>
-            <p>УНИЧТОЖЕНО</p>
+            <p>УБИЙСТВ</p>
         </div>
     </div>
-    <div id="health-bar-container">
-        <div id="health-bar" style="width: 100%"></div>
+    <div id="health-container">
+        <div id="health">❤️ 100</div>
     </div>
-    <div class="controls-hint">🖱️ ВЕДИ ПАЛЬЦЕМ / МЫШКОЙ | 🔫 ТАПАЙ — СТРЕЛЬБА</div>
-    <button class="start-btn" id="startBtn">🚀 СТАРТ</button>
+    <div id="ammo">
+        <span id="ammo-count">30</span>
+        <p>ПАТРОНЫ</p>
+    </div>
+    <div id="crosshair"></div>
+    <div class="controls-hint">🖱️ ПРИЦЕЛ МЫШЬЮ | 🔫 ЛКМ / ТАП — СТРЕЛЬБА | R — ПЕРЕЗАРЯДКА</div>
+    <button class="start-btn" id="startBtn">🎯 СТАРТ</button>
     <div class="status" id="status"></div>
 
     <script type="importmap">
@@ -168,323 +227,266 @@ HTML = '''<!DOCTYPE html>
     <script type="module">
         import * as THREE from 'three';
         
-        // Настройки
         let score = 0;
         let kills = 0;
         let health = 100;
+        let ammo = 30;
+        let maxAmmo = 30;
         let gameRunning = false;
         
         const scoreElement = document.getElementById('score');
         const killsElement = document.getElementById('kills');
-        const healthBar = document.getElementById('health-bar');
+        const healthElement = document.getElementById('health');
+        const ammoElement = document.getElementById('ammo-count');
         const startBtn = document.getElementById('startBtn');
         const statusDiv = document.getElementById('status');
         
         // Сцена
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x020210);
-        scene.fog = new THREE.FogExp2(0x020210, 0.0008);
+        scene.background = new THREE.Color(0x0a0a1a);
+        scene.fog = new THREE.FogExp2(0x0a0a1a, 0.003);
         
-        // Камера
-        const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 2, 14);
-        camera.lookAt(0, 0, 0);
+        // Камера (от первого лица)
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
+        camera.position.set(0, 1.6, 0);
         
         // Рендер
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
         
-        // Планеты на заднем плане
-        const planetGeo = new THREE.SphereGeometry(1.5, 64, 64);
-        const planetMat = new THREE.MeshStandardMaterial({ color: 0xaa66ff, emissive: 0x220044, roughness: 0.4, metalness: 0.7 });
-        const planet = new THREE.Mesh(planetGeo, planetMat);
-        planet.position.set(-8, -2, -25);
-        scene.add(planet);
+        // Текстуры пола и стен
+        const textureLoader = new THREE.TextureLoader();
         
-        const planet2Geo = new THREE.SphereGeometry(1, 64, 64);
-        const planet2Mat = new THREE.MeshStandardMaterial({ color: 0xff6644, emissive: 0x442200, roughness: 0.5 });
-        const planet2 = new THREE.Mesh(planet2Geo, planet2Mat);
-        planet2.position.set(6, 3, -30);
-        scene.add(planet2);
+        // Пол (сетка)
+        const gridHelper = new THREE.GridHelper(50, 20, 0x88aaff, 0x335588);
+        gridHelper.position.y = -0.5;
+        scene.add(gridHelper);
         
-        // Звёздное поле (мерцающее)
-        const starsGeometry = new THREE.BufferGeometry();
-        const starsCount = 3000;
-        const starsPositions = new Float32Array(starsCount * 3);
-        const starsColors = new Float32Array(starsCount * 3);
-        for (let i = 0; i < starsCount; i++) {
-            starsPositions[i*3] = (Math.random() - 0.5) * 800;
-            starsPositions[i*3+1] = (Math.random() - 0.5) * 600;
-            starsPositions[i*3+2] = (Math.random() - 0.5) * 300 - 100;
-            const brightness = 0.5 + Math.random() * 0.5;
-            starsColors[i*3] = brightness;
-            starsColors[i*3+1] = brightness * 0.8;
-            starsColors[i*3+2] = brightness;
-        }
-        starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
-        starsGeometry.setAttribute('color', new THREE.BufferAttribute(starsColors, 3));
-        const starsMaterial = new THREE.PointsMaterial({ size: 0.3, vertexColors: true, transparent: true, opacity: 0.8 });
-        const stars = new THREE.Points(starsGeometry, starsMaterial);
-        scene.add(stars);
+        // Прозрачный пол под сеткой
+        const groundPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(30, 30),
+            new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.5 })
+        );
+        groundPlane.rotation.x = -Math.PI / 2;
+        groundPlane.position.y = -0.5;
+        scene.add(groundPlane);
         
-        // Туманность (частицы)
-        const nebulaCount = 800;
-        const nebulaGeometry = new THREE.BufferGeometry();
-        const nebulaPositions = new Float32Array(nebulaCount * 3);
-        for (let i = 0; i < nebulaCount; i++) {
-            nebulaPositions[i*3] = (Math.random() - 0.5) * 60;
-            nebulaPositions[i*3+1] = (Math.random() - 0.5) * 30;
-            nebulaPositions[i*3+2] = (Math.random() - 0.5) * 40 - 20;
-        }
-        nebulaGeometry.setAttribute('position', new THREE.BufferAttribute(nebulaPositions, 3));
-        const nebulaMat = new THREE.PointsMaterial({ color: 0x8844ff, size: 0.08, transparent: true, opacity: 0.4 });
-        const nebula = new THREE.Points(nebulaGeometry, nebulaMat);
-        scene.add(nebula);
+        // Стены (простые блоки)
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.6 });
         
-        // Игрок
-        const playerGroup = new THREE.Group();
+        const walls = [
+            { w: 20, h: 3, d: 0.5, x: 0, z: -12, color: 0x3a3a4a },
+            { w: 20, h: 3, d: 0.5, x: 0, z: 12, color: 0x3a3a4a },
+            { w: 0.5, h: 3, d: 25, x: -12, z: 0, color: 0x3a3a4a },
+            { w: 0.5, h: 3, d: 25, x: 12, z: 0, color: 0x3a3a4a }
+        ];
         
-        // Корпус
-        const bodyGeo = new THREE.ConeGeometry(0.55, 1.4, 16);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3a86ff, metalness: 0.85, roughness: 0.2, emissive: 0x001133 });
-        const body = new THREE.Mesh(bodyGeo, bodyMat);
-        body.rotation.x = Math.PI / 2;
-        playerGroup.add(body);
-        
-        // Крылья
-        const wingGeo = new THREE.BoxGeometry(1.4, 0.08, 0.5);
-        const wingMat = new THREE.MeshStandardMaterial({ color: 0x2a6eff, metalness: 0.8 });
-        const leftWing = new THREE.Mesh(wingGeo, wingMat);
-        leftWing.position.set(-0.8, 0.05, 0);
-        const rightWing = new THREE.Mesh(wingGeo, wingMat);
-        rightWing.position.set(0.8, 0.05, 0);
-        playerGroup.add(leftWing);
-        playerGroup.add(rightWing);
-        
-        // Крылья верхние
-        const topWingGeo = new THREE.BoxGeometry(0.4, 0.5, 0.3);
-        const topWing = new THREE.Mesh(topWingGeo, wingMat);
-        topWing.position.set(0, 0.35, -0.2);
-        playerGroup.add(topWing);
-        
-        // Двигатели
-        const engineGeo = new THREE.CylinderGeometry(0.2, 0.25, 0.5, 8);
-        const engineMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 });
-        const leftEngine = new THREE.Mesh(engineGeo, engineMat);
-        leftEngine.position.set(-0.5, -0.2, -0.7);
-        const rightEngine = new THREE.Mesh(engineGeo, engineMat);
-        rightEngine.position.set(0.5, -0.2, -0.7);
-        playerGroup.add(leftEngine);
-        playerGroup.add(rightEngine);
-        
-        // Огонь
-        const fireGeo = new THREE.ConeGeometry(0.15, 0.5, 6);
-        const fireMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff3300 });
-        const leftFire = new THREE.Mesh(fireGeo, fireMat);
-        leftFire.position.set(-0.5, -0.25, -1.0);
-        const rightFire = new THREE.Mesh(fireGeo, fireMat);
-        rightFire.position.set(0.5, -0.25, -1.0);
-        playerGroup.add(leftFire);
-        playerGroup.add(rightFire);
-        
-        // Светящийся эффект вокруг корабля
-        const glowGeo = new THREE.SphereGeometry(0.8, 16, 16);
-        const glowMat = new THREE.MeshBasicMaterial({ color: 0x3a86ff, transparent: true, opacity: 0.15 });
-        const glow = new THREE.Mesh(glowGeo, glowMat);
-        playerGroup.add(glow);
-        
-        scene.add(playerGroup);
+        walls.forEach(w => {
+            const wallGeo = new THREE.BoxGeometry(w.w, w.h, w.d);
+            const wallMesh = new THREE.Mesh(wallGeo, new THREE.MeshStandardMaterial({ color: w.color, roughness: 0.5 }));
+            wallMesh.position.set(w.x, 1, w.z);
+            scene.add(wallMesh);
+        });
         
         // Освещение
-        const ambientLight = new THREE.AmbientLight(0x222222);
+        const ambientLight = new THREE.AmbientLight(0x333333);
         scene.add(ambientLight);
-        const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
         mainLight.position.set(5, 10, 7);
-        mainLight.castShadow = true;
-        mainLight.receiveShadow = false;
         scene.add(mainLight);
-        const fillLight = new THREE.PointLight(0x4466ff, 0.5);
-        fillLight.position.set(0, 2, -3);
+        const fillLight = new THREE.PointLight(0x4466ff, 0.3);
+        fillLight.position.set(0, 3, 5);
         scene.add(fillLight);
-        const backLight = new THREE.PointLight(0xff6644, 0.4);
-        backLight.position.set(0, 1, 5);
-        scene.add(backLight);
         
-        // Частицы для эффектов
+        // Враги
+        let enemies = [];
+        let enemySpawnCounter = 0;
+        
+        // Пули (raycaster)
+        let shootCooldown = 0;
+        let reloading = false;
+        
+        // Частицы
         let particles = [];
         
+        // Мышь
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        // Эффект отдачи
+        let recoil = 0;
+        
+        class Enemy {
+            constructor(x, z) {
+                const group = new THREE.Group();
+                
+                // Тело
+                const bodyGeo = new THREE.BoxGeometry(0.7, 1.5, 0.7);
+                const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, metalness: 0.3 });
+                const body = new THREE.Mesh(bodyGeo, bodyMat);
+                body.position.y = 0.75;
+                group.add(body);
+                
+                // Голова
+                const headGeo = new THREE.SphereGeometry(0.45, 16, 16);
+                const headMat = new THREE.MeshStandardMaterial({ color: 0xcc8866 });
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 1.45;
+                group.add(head);
+                
+                // Глаза
+                const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+                const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), eyeMat);
+                leftEye.position.set(-0.2, 1.55, 0.45);
+                const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), eyeMat);
+                rightEye.position.set(0.2, 1.55, 0.45);
+                group.add(leftEye);
+                group.add(rightEye);
+                
+                group.position.set(x, 0, z);
+                scene.add(group);
+                this.mesh = group;
+                this.health = 3;
+                this.speed = 0.03;
+                this.direction = 1;
+            }
+            
+            update() {
+                // Движение к центру
+                const dx = -this.mesh.position.x;
+                const dz = -this.mesh.position.z;
+                const len = Math.sqrt(dx*dx + dz*dz);
+                if (len > 0.1) {
+                    this.mesh.position.x += (dx / len) * this.speed;
+                    this.mesh.position.z += (dz / len) * this.speed;
+                }
+                // Поворот к игроку
+                this.mesh.lookAt(0, 0, 0);
+            }
+            
+            hit() {
+                this.health--;
+                if (this.health <= 0) {
+                    this.destroy();
+                    return true;
+                }
+                return false;
+            }
+            
+            destroy() {
+                addExplosion(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z);
+                scene.remove(this.mesh);
+            }
+        }
+        
         function addExplosion(x, y, z) {
-            for (let i = 0; i < 25; i++) {
-                const particleGeo = new THREE.SphereGeometry(0.05 + Math.random() * 0.08, 4, 4);
+            for (let i = 0; i < 15; i++) {
+                const particleGeo = new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 4, 4);
                 const particleMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff3300 });
                 const particle = new THREE.Mesh(particleGeo, particleMat);
                 particle.position.set(x, y, z);
                 scene.add(particle);
                 particles.push({
                     mesh: particle,
-                    life: 40,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    vz: (Math.random() - 0.5) * 0.3
+                    life: 30,
+                    vx: (Math.random() - 0.5) * 0.2,
+                    vy: (Math.random() - 0.5) * 0.2 + 0.1,
+                    vz: (Math.random() - 0.5) * 0.2
                 });
             }
         }
         
-        // Пули
-        let bullets = [];
-        let shootCooldown = 0;
-        
-        // Враги
-        let enemies = [];
-        let enemySpawnCounter = 0;
-        
-        // Управление (мышь/тач)
-        let touchX = 0;
-        let touchY = 0;
-        let targetX = 0;
-        let targetY = 0;
-        
-        class Enemy {
-            constructor() {
-                const group = new THREE.Group();
-                
-                // Корпус
-                const bodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.7, 8);
-                const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdc143c, metalness: 0.6, roughness: 0.4 });
-                const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-                group.add(bodyMesh);
-                
-                // Крылья
-                const wingGeo = new THREE.BoxGeometry(1.1, 0.08, 0.35);
-                const wingMat = new THREE.MeshStandardMaterial({ color: 0x8b0000 });
-                const leftW = new THREE.Mesh(wingGeo, wingMat);
-                leftW.position.set(-0.65, 0, 0);
-                const rightW = new THREE.Mesh(wingGeo, wingMat);
-                rightW.position.set(0.65, 0, 0);
-                group.add(leftW);
-                group.add(rightW);
-                
-                // Шипы
-                const spikeGeo = new THREE.ConeGeometry(0.15, 0.5, 4);
-                const spikeMat = new THREE.MeshStandardMaterial({ color: 0xff4444 });
-                const topSpike = new THREE.Mesh(spikeGeo, spikeMat);
-                topSpike.position.set(0, 0.4, 0);
-                group.add(topSpike);
-                
-                // Свечение
-                const glowEnemyGeo = new THREE.SphereGeometry(0.6, 8, 8);
-                const glowEnemyMat = new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.2 });
-                const glowEnemy = new THREE.Mesh(glowEnemyGeo, glowEnemyMat);
-                group.add(glowEnemy);
-                
-                group.position.x = (Math.random() - 0.5) * 14;
-                group.position.z = (Math.random() - 0.5) * 8 - 25;
-                group.position.y = 0;
-                
-                scene.add(group);
-                this.mesh = group;
-                this.speed = 0.06 + Math.random() * 0.06;
-                this.health = 1;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.03;
-            }
-            
-            update() {
-                this.mesh.position.z += this.speed;
-                this.mesh.rotation.z += this.rotationSpeed;
-                this.mesh.rotation.y += 0.02;
-            }
-            
-            destroy() {
-                addExplosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z);
-                scene.remove(this.mesh);
-            }
-        }
-        
-        class Bullet {
-            constructor(x, y, z) {
-                const geometry = new THREE.SphereGeometry(0.1, 8, 8);
-                const material = new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xff6600 });
-                this.mesh = new THREE.Mesh(geometry, material);
-                this.mesh.position.set(x, y, z);
-                scene.add(this.mesh);
-                this.speed = -14;
-            }
-            
-            update() {
-                this.mesh.position.z += this.speed;
-            }
-            
-            destroy() {
-                scene.remove(this.mesh);
-            }
+        function spawnEnemy() {
+            const side = Math.floor(Math.random() * 4);
+            let x, z;
+            if (side === 0) { x = -8 + Math.random() * 16; z = -15; }
+            else if (side === 1) { x = -8 + Math.random() * 16; z = 15; }
+            else if (side === 2) { x = -15; z = -8 + Math.random() * 16; }
+            else { x = 15; z = -8 + Math.random() * 16; }
+            x = Math.min(Math.max(x, -12), 12);
+            z = Math.min(Math.max(z, -12), 12);
+            enemies.push(new Enemy(x, z));
         }
         
         function shoot() {
             if (!gameRunning) return;
-            const bullet = new Bullet(
-                playerGroup.position.x,
-                playerGroup.position.y + 0.2,
-                playerGroup.position.z - 1
-            );
-            bullets.push(bullet);
+            if (reloading) return;
+            if (ammo <= 0) {
+                reload();
+                return;
+            }
+            
+            ammo--;
+            ammoElement.innerText = ammo;
+            shootCooldown = 8;
+            recoil = 5;
+            
+            // Raycaster для стрельбы
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects(enemies.map(e => e.mesh), true);
+            
+            if (intersects.length > 0) {
+                let hit = false;
+                for (let obj of intersects) {
+                    let enemy = enemies.find(e => e.mesh === obj.object.parent || e.mesh.children.includes(obj.object));
+                    if (enemy) {
+                        if (enemy.hit()) {
+                            const index = enemies.indexOf(enemy);
+                            if (index !== -1) enemies.splice(index, 1);
+                            kills++;
+                            score += 10;
+                            scoreElement.innerText = score;
+                            killsElement.innerText = kills;
+                            addExplosion(enemy.mesh.position.x, enemy.mesh.position.y + 1, enemy.mesh.position.z);
+                        }
+                        hit = true;
+                        break;
+                    }
+                }
+                if (hit) {
+                    // Эффект попадания
+                    const hitPoint = intersects[0].point;
+                    addExplosion(hitPoint.x, hitPoint.y, hitPoint.z);
+                }
+            }
+            
+            // Визуальный эффект выстрела
+            if (navigator.vibrate) navigator.vibrate(30);
         }
         
-        function spawnEnemy() {
-            if (enemies.length < 8) {
-                enemies.push(new Enemy());
-            }
+        function reload() {
+            if (reloading) return;
+            if (ammo === maxAmmo) return;
+            reloading = true;
+            setTimeout(() => {
+                ammo = maxAmmo;
+                ammoElement.innerText = ammo;
+                reloading = false;
+            }, 1500);
         }
         
         function updateGame() {
             if (!gameRunning) return;
             
-            // Движение за пальцем/мышкой
-            let moveX = (touchX / window.innerWidth) * 12 - 6;
-            let moveY = -(touchY / window.innerHeight) * 6 + 3;
-            moveX = Math.min(Math.max(moveX, -5.5), 5.5);
-            moveY = Math.min(Math.max(moveY, -2.5), 3);
-            
-            playerGroup.position.x += (moveX - playerGroup.position.x) * 0.12;
-            playerGroup.position.y += (moveY - playerGroup.position.y) * 0.12;
-            
-            // Вращение
-            playerGroup.rotation.z = playerGroup.position.x * -0.1;
-            playerGroup.rotation.x = playerGroup.position.y * 0.08;
-            
-            // Анимация огня
-            const time = Date.now() * 0.01;
-            leftFire.scale.z = 0.8 + Math.sin(time) * 0.3;
-            rightFire.scale.z = 0.8 + Math.cos(time) * 0.3;
-            glow.scale.setScalar(1 + Math.sin(time * 5) * 0.05);
+            // Отдача
+            if (recoil > 0) {
+                recoil--;
+            }
             
             // Перезарядка
             if (shootCooldown > 0) shootCooldown--;
-            
-            // Пули
-            for (let i = 0; i < bullets.length; i++) {
-                bullets[i].update();
-                if (bullets[i].mesh.position.z < -20) {
-                    bullets[i].destroy();
-                    bullets.splice(i, 1);
-                    i--;
-                }
-            }
             
             // Враги
             for (let i = 0; i < enemies.length; i++) {
                 enemies[i].update();
                 
                 // Столкновение с игроком
-                const dx = enemies[i].mesh.position.x - playerGroup.position.x;
-                const dz = enemies[i].mesh.position.z - playerGroup.position.z;
-                const dist = Math.sqrt(dx*dx + dz*dz);
-                if (dist < 1.0) {
-                    health -= 15;
-                    healthBar.style.width = Math.max(0, health) + '%';
-                    addExplosion(enemies[i].mesh.position.x, enemies[i].mesh.position.y, enemies[i].mesh.position.z);
+                const dist = Math.sqrt(enemies[i].mesh.position.x * enemies[i].mesh.position.x + enemies[i].mesh.position.z * enemies[i].mesh.position.z);
+                if (dist < 1.2) {
+                    health -= 10;
+                    healthElement.innerText = '❤️ ' + Math.max(0, health);
                     enemies[i].destroy();
                     enemies.splice(i, 1);
                     i--;
@@ -492,48 +494,20 @@ HTML = '''<!DOCTYPE html>
                     if (health <= 0) {
                         gameRunning = false;
                         statusDiv.style.display = 'block';
-                        statusDiv.innerHTML = '💀 ИГРА ОКОНЧЕНА 💀<br>Счёт: ' + score;
+                        statusDiv.innerHTML = '💀 ВЫ УБИТЫ 💀<br>Убийств: ' + kills;
                         startBtn.style.display = 'block';
-                    }
-                    continue;
-                }
-                
-                // Попадание пуль
-                for (let j = 0; j < bullets.length; j++) {
-                    const bdx = bullets[j].mesh.position.x - enemies[i].mesh.position.x;
-                    const bdz = bullets[j].mesh.position.z - enemies[i].mesh.position.z;
-                    const bdist = Math.sqrt(bdx*bdx + bdz*bdz);
-                    if (bdist < 0.8) {
-                        bullets[j].destroy();
-                        bullets.splice(j, 1);
-                        addExplosion(enemies[i].mesh.position.x, enemies[i].mesh.position.y, enemies[i].mesh.position.z);
-                        enemies[i].destroy();
-                        enemies.splice(i, 1);
-                        kills++;
-                        score += 10;
-                        scoreElement.innerText = score;
-                        killsElement.innerText = kills;
-                        i--;
-                        break;
                     }
                 }
             }
             
             // Спавн врагов
-            if (enemies.length < 4) {
+            if (enemies.length < 5) {
                 enemySpawnCounter++;
-                if (enemySpawnCounter > 50) {
+                if (enemySpawnCounter > 70) {
                     spawnEnemy();
                     enemySpawnCounter = 0;
                 }
             }
-            
-            // Анимация звёзд и планет
-            stars.rotation.y += 0.0005;
-            stars.rotation.x += 0.0003;
-            nebula.rotation.y += 0.0003;
-            planet.rotation.y += 0.002;
-            planet2.rotation.x += 0.001;
             
             // Частицы
             for (let i = 0; i < particles.length; i++) {
@@ -541,7 +515,7 @@ HTML = '''<!DOCTYPE html>
                 particles[i].mesh.position.y += particles[i].vy;
                 particles[i].mesh.position.z += particles[i].vz;
                 particles[i].life--;
-                particles[i].mesh.scale.setScalar(particles[i].life / 40);
+                particles[i].mesh.scale.setScalar(particles[i].life / 30);
                 if (particles[i].life <= 0) {
                     scene.remove(particles[i].mesh);
                     particles.splice(i, 1);
@@ -549,10 +523,10 @@ HTML = '''<!DOCTYPE html>
                 }
             }
             
-            // Камера
-            camera.position.x += (playerGroup.position.x * 0.25 - camera.position.x) * 0.05;
-            camera.position.y += (playerGroup.position.y * 0.2 - camera.position.y) * 0.05;
-            camera.lookAt(playerGroup.position.x * 0.5, playerGroup.position.y * 0.3, 0);
+            // Камера от первого лица (вращение от мыши)
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = -mouseX * 0.002;
+            camera.rotation.x = Math.min(Math.max(-mouseY * 0.0015 + recoil * 0.02, -0.5), 0.5);
         }
         
         function animate() {
@@ -561,55 +535,69 @@ HTML = '''<!DOCTYPE html>
             renderer.render(scene, camera);
         }
         
-        // Управление (мышь и тач)
-        function handleMove(clientX, clientY) {
-            touchX = clientX;
-            touchY = clientY;
-        }
+        // Управление мышью
+        document.addEventListener('mousemove', (e) => {
+            if (!gameRunning) return;
+            mouseX += e.movementX;
+            mouseY += e.movementY;
+            mouseY = Math.min(Math.max(mouseY, -300), 300);
+        });
         
-        function handleShoot() {
+        document.addEventListener('click', (e) => {
             if (!gameRunning) return;
             if (shootCooldown <= 0) {
                 shoot();
-                shootCooldown = 10;
             }
-        }
+        });
         
-        document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
-        document.addEventListener('click', (e) => handleShoot());
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                reload();
+                e.preventDefault();
+            }
+        });
         
         // Тач-управление для телефона
-        document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            handleMove(touch.clientX, touch.clientY);
-        }, { passive: false });
-        
+        let lastTouchX = 0;
         document.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            if (!gameRunning) return;
             const touch = e.touches[0];
-            handleMove(touch.clientX, touch.clientY);
-            handleShoot();
+            lastTouchX = touch.clientX;
+            if (shootCooldown <= 0) shoot();
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - lastTouchX;
+            mouseX += deltaX;
+            lastTouchX = touch.clientX;
         }, { passive: false });
         
         function startGame() {
-            bullets.forEach(b => b.destroy());
             enemies.forEach(e => e.destroy());
-            bullets = [];
             enemies = [];
+            particles.forEach(p => scene.remove(p.mesh));
+            particles = [];
             score = 0;
             kills = 0;
             health = 100;
+            ammo = 30;
             scoreElement.innerText = '0';
             killsElement.innerText = '0';
-            healthBar.style.width = '100%';
-            playerGroup.position.set(0, 0, 0);
+            healthElement.innerText = '❤️ 100';
+            ammoElement.innerText = '30';
             gameRunning = true;
             startBtn.style.display = 'none';
             statusDiv.style.display = 'none';
+            mouseX = 0;
+            mouseY = 0;
+            camera.rotation.set(0, 0, 0);
             
             for(let i = 0; i < 3; i++) {
-                setTimeout(() => spawnEnemy(), i * 600);
+                setTimeout(() => spawnEnemy(), i * 800);
             }
         }
         
