@@ -8,7 +8,7 @@ HTML = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Tanki Battle | Akuma Game</title>
+    <title>Истребитель | Akuma Game</title>
     <style>
         * {
             margin: 0;
@@ -37,8 +37,8 @@ HTML = '''<!DOCTYPE html>
             margin: 0 auto;
             border-radius: 16px;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            background: linear-gradient(180deg, #1a3a5c 0%, #0a1a2c 100%);
             cursor: none;
-            background: #2a2a3a;
         }
         
         .info {
@@ -49,7 +49,7 @@ HTML = '''<!DOCTYPE html>
             flex-wrap: wrap;
         }
         
-        .score-box, .health-box, .kills-box, .wave-box {
+        .score-box, .health-box, .kills-box {
             text-align: center;
             background: rgba(0,0,0,0.5);
             padding: 8px 20px;
@@ -57,14 +57,14 @@ HTML = '''<!DOCTYPE html>
             backdrop-filter: blur(10px);
         }
         
-        .score-box span, .health-box span, .kills-box span, .wave-box span {
+        .score-box span, .health-box span, .kills-box span {
             color: #ffcc00;
             font-size: 28px;
             font-weight: bold;
             display: block;
         }
         
-        .score-box p, .health-box p, .kills-box p, .wave-box p {
+        .score-box p, .health-box p, .kills-box p {
             font-size: 11px;
             color: #aaa;
             margin-top: 3px;
@@ -141,11 +141,7 @@ HTML = '''<!DOCTYPE html>
             </div>
             <div class="kills-box">
                 <span id="kills">0</span>
-                <p>УНИЧТОЖЕНО</p>
-            </div>
-            <div class="wave-box">
-                <span id="wave">1</span>
-                <p>ВОЛНА</p>
+                <p>СБИТО</p>
             </div>
             <div class="health-box">
                 <span id="health">❤️ 100</span>
@@ -153,16 +149,15 @@ HTML = '''<!DOCTYPE html>
             </div>
         </div>
         
-        <button class="start-btn" id="startBtn">🚀 НАЧАТЬ БИТВУ</button>
+        <button class="start-btn" id="startBtn">🚀 НАЧАТЬ БОЙ</button>
         <div class="controls">
-            <span>🖱️ МЫШЬ — ПРИЦЕЛ</span>
-            <span>🔫 ЛКМ / КЛИК — СТРЕЛЯТЬ</span>
-            <span>⬅️➡️ A/D — ДВИЖЕНИЕ</span>
+            <span>🖱️ МЫШЬ — ДВИЖЕНИЕ</span>
+            <span>🔫 ЛКМ / КЛИК — РАКЕТА</span>
         </div>
-        <div class="status" id="status">🔫 Уничтожай вражеские танки!</div>
+        <div class="status" id="status">✈️ Уничтожай вражеские вертолёты!</div>
         
         <div class="footer">
-            <p>🎮 Каждые 10 убийств — новая волна. Стрельба по прицелу!</p>
+            <p>🎮 Веди мышкой — истребитель летит за курсором. Кликай — пускай ракеты!</p>
         </div>
     </div>
     
@@ -173,7 +168,7 @@ HTML = '''<!DOCTYPE html>
         const canvasWidth = 700;
         const canvasHeight = 500;
         
-        // Игрок (танк)
+        // Истребитель
         let player = {
             x: canvasWidth / 2 - 25,
             y: canvasHeight - 80,
@@ -183,48 +178,39 @@ HTML = '''<!DOCTYPE html>
             maxHealth: 100
         };
         
-        // Пули (летят по направлению к прицелу)
-        let bullets = [];
+        // Ракеты
+        let missiles = [];
         let shootCooldown = 0;
-        let shootDelay = 15;
+        let shootDelay = 12;
         
-        // Враги
+        // Вертолёты врагов
         let enemies = [];
         let enemySpawnCounter = 0;
-        let enemySpawnDelay = 80;
-        let wave = 1;
+        let enemySpawnDelay = 45;
         let kills = 0;
         let score = 0;
+        
+        let gameRunning = false;
+        let gameOver = false;
         
         // Мышь
         let mouseX = canvasWidth / 2;
         let mouseY = canvasHeight / 2;
         
-        let gameRunning = false;
-        let gameOver = false;
-        
         // Элементы DOM
         const scoreElement = document.getElementById('score');
         const killsElement = document.getElementById('kills');
         const healthElement = document.getElementById('health');
-        const waveElement = document.getElementById('wave');
         const startBtn = document.getElementById('startBtn');
         const statusElement = document.getElementById('status');
         
-        // Движение танка
-        let leftPressed = false;
-        let rightPressed = false;
-        
-        // Класс врага
         class Enemy {
-            constructor(x, y, type) {
-                this.x = x;
-                this.y = y;
-                this.width = 45;
-                this.height = 45;
-                this.type = type || 'normal';
-                this.health = this.type === 'heavy' ? 3 : 1;
-                this.speed = this.type === 'fast' ? 2 : 1.2;
+            constructor() {
+                this.width = 50;
+                this.height = 40;
+                this.x = Math.random() * (canvasWidth - this.width);
+                this.y = -this.height;
+                this.speed = 1.5 + Math.random() * 1.5;
             }
             
             move() {
@@ -235,41 +221,64 @@ HTML = '''<!DOCTYPE html>
                 ctx.save();
                 ctx.shadowBlur = 0;
                 
-                if (this.type === 'heavy') {
-                    ctx.fillStyle = '#8B0000';
-                    ctx.fillRect(this.x, this.y, this.width, this.height);
-                    ctx.fillStyle = '#660000';
-                    ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, 10);
-                    ctx.fillRect(this.x + 5, this.y + this.height - 15, this.width - 10, 10);
-                    ctx.fillStyle = '#444';
-                    ctx.fillRect(this.x - 5, this.y + 10, 5, 25);
-                    ctx.fillRect(this.x + this.width, this.y + 10, 5, 25);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 14px Arial';
-                    ctx.fillText('💪', this.x + 15, this.y + 30);
-                } else if (this.type === 'fast') {
-                    ctx.fillStyle = '#D2691E';
-                    ctx.fillRect(this.x, this.y, this.width, this.height);
-                    ctx.fillStyle = '#B8860B';
-                    ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, 10);
-                    ctx.fillRect(this.x + 5, this.y + this.height - 15, this.width - 10, 10);
-                    ctx.fillStyle = '#444';
-                    ctx.fillRect(this.x - 5, this.y + 10, 5, 25);
-                    ctx.fillRect(this.x + this.width, this.y + 10, 5, 25);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 14px Arial';
-                    ctx.fillText('⚡', this.x + 15, this.y + 30);
-                } else {
-                    ctx.fillStyle = '#DC143C';
-                    ctx.fillRect(this.x, this.y, this.width, this.height);
-                    ctx.fillStyle = '#8B0000';
-                    ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, 10);
-                    ctx.fillRect(this.x + 5, this.y + this.height - 15, this.width - 10, 10);
-                    ctx.fillStyle = '#444';
-                    ctx.fillRect(this.x - 5, this.y + 10, 5, 25);
-                    ctx.fillRect(this.x + this.width, this.y + 10, 5, 25);
-                }
+                // Корпус вертолёта
+                ctx.fillStyle = '#4a6a3a';
+                ctx.fillRect(this.x, this.y, this.width, this.height - 10);
                 
+                // Кабина
+                ctx.fillStyle = '#87CEEB';
+                ctx.fillRect(this.x + 5, this.y + 5, 15, 15);
+                
+                // Лопасти
+                ctx.fillStyle = '#2a2a2a';
+                const bladeY = this.y - 5;
+                ctx.fillRect(this.x + 10, bladeY, 30, 8);
+                ctx.fillRect(this.x + 20, bladeY - 5, 8, 18);
+                
+                // Хвост
+                ctx.fillStyle = '#3a5a2a';
+                ctx.fillRect(this.x + this.width - 10, this.y + 15, 15, 10);
+                
+                // Пулемёт
+                ctx.fillStyle = '#555';
+                ctx.fillRect(this.x + this.width - 5, this.y + 20, 10, 5);
+                
+                ctx.restore();
+            }
+        }
+        
+        class Missile {
+            constructor(x, y, targetX, targetY) {
+                this.x = x;
+                this.y = y;
+                this.width = 8;
+                this.height = 5;
+                // Направление от истребителя к цели (курсору)
+                const dx = targetX - x;
+                const dy = targetY - y;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                this.vx = (dx / len) * 8;
+                this.vy = (dy / len) * 8;
+            }
+            
+            move() {
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ff6600';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = '#ffcc00';
+                ctx.fillRect(this.x + this.width - 2, this.y + 1, 4, 3);
+                ctx.fillStyle = '#ff3300';
+                ctx.beginPath();
+                ctx.moveTo(this.x - 5, this.y + 2);
+                ctx.lineTo(this.x, this.y);
+                ctx.lineTo(this.x, this.y + 5);
+                ctx.fill();
                 ctx.restore();
             }
         }
@@ -277,9 +286,9 @@ HTML = '''<!DOCTYPE html>
         function initGame() {
             player.health = 100;
             player.x = canvasWidth / 2 - 25;
-            bullets = [];
+            player.y = canvasHeight - 80;
+            missiles = [];
             enemies = [];
-            wave = 1;
             kills = 0;
             score = 0;
             shootCooldown = 0;
@@ -289,59 +298,41 @@ HTML = '''<!DOCTYPE html>
             scoreElement.innerText = '0';
             killsElement.innerText = '0';
             healthElement.innerText = '❤️ 100';
-            waveElement.innerText = '1';
         }
         
         function spawnEnemy() {
-            // Ограничиваем количество врагов на экране (максимум 5)
-            if (enemies.length >= 5) return;
-            
-            const rand = Math.random();
-            let type = 'normal';
-            if (wave >= 3 && rand < 0.2) type = 'heavy';
-            else if (wave >= 2 && rand < 0.35) type = 'fast';
-            
-            const x = Math.random() * (canvasWidth - 45);
-            enemies.push(new Enemy(x, -45, type));
+            if (enemies.length >= 6) return;
+            enemies.push(new Enemy());
         }
         
-        function shoot() {
+        function shootMissile() {
             if (!gameRunning) return;
-            
-            // Направление от танка к прицелу
             const fromX = player.x + player.width / 2;
             const fromY = player.y + player.height / 2;
-            const angle = Math.atan2(mouseY - fromY, mouseX - fromX);
-            const speed = 10;
-            
-            bullets.push({
-                x: fromX - 3,
-                y: fromY - 3,
-                width: 6,
-                height: 6,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed
-            });
+            missiles.push(new Missile(fromX, fromY, mouseX, mouseY));
         }
         
         function update() {
             if (!gameRunning || gameOver) return;
             
-            // Движение танка
-            if (leftPressed && player.x > 0) player.x -= 5;
-            if (rightPressed && player.x < canvasWidth - player.width) player.x += 5;
+            // Движение истребителя за мышкой
+            let targetX = mouseX - player.width / 2;
+            let targetY = mouseY - player.height / 2;
+            targetX = Math.min(Math.max(targetX, 0), canvasWidth - player.width);
+            targetY = Math.min(Math.max(targetY, 0), canvasHeight - player.height);
+            
+            player.x = player.x * 0.8 + targetX * 0.2;
+            player.y = player.y * 0.8 + targetY * 0.2;
             
             // Перезарядка
             if (shootCooldown > 0) shootCooldown--;
             
-            // Пули
-            for (let i = 0; i < bullets.length; i++) {
-                bullets[i].x += bullets[i].vx;
-                bullets[i].y += bullets[i].vy;
-                
-                if (bullets[i].x < -50 || bullets[i].x > canvasWidth + 50 ||
-                    bullets[i].y < -50 || bullets[i].y > canvasHeight + 50) {
-                    bullets.splice(i, 1);
+            // Ракеты
+            for (let i = 0; i < missiles.length; i++) {
+                missiles[i].move();
+                if (missiles[i].x < -100 || missiles[i].x > canvasWidth + 100 ||
+                    missiles[i].y < -100 || missiles[i].y > canvasHeight + 100) {
+                    missiles.splice(i, 1);
                     i--;
                 }
             }
@@ -350,14 +341,13 @@ HTML = '''<!DOCTYPE html>
             for (let i = 0; i < enemies.length; i++) {
                 enemies[i].move();
                 
-                // Проверка столкновения с игроком
+                // Столкновение с истребителем
                 if (enemies[i].x < player.x + player.width &&
                     enemies[i].x + enemies[i].width > player.x &&
                     enemies[i].y < player.y + player.height &&
                     enemies[i].y + enemies[i].height > player.y) {
                     
-                    const damage = enemies[i].type === 'heavy' ? 15 : 10;
-                    player.health -= damage;
+                    player.health -= 15;
                     healthElement.innerText = '❤️ ' + Math.max(0, player.health);
                     enemies.splice(i, 1);
                     i--;
@@ -365,7 +355,7 @@ HTML = '''<!DOCTYPE html>
                     if (player.health <= 0) {
                         gameRunning = false;
                         gameOver = true;
-                        statusElement.innerHTML = '💀 ТАНК УНИЧТОЖЕН! ИГРА ОКОНЧЕНА 💀';
+                        statusElement.innerHTML = '💥 ИСТРЕБИТЕЛЬ СБИТ! ИГРА ОКОНЧЕНА 💥';
                         statusElement.style.color = '#ff6666';
                         startBtn.style.display = 'block';
                         return;
@@ -373,85 +363,69 @@ HTML = '''<!DOCTYPE html>
                     continue;
                 }
                 
-                // Проверка столкновения пуль с врагами
-                for (let j = 0; j < bullets.length; j++) {
-                    if (bullets[j].x < enemies[i].x + enemies[i].width &&
-                        bullets[j].x + bullets[j].width > enemies[i].x &&
-                        bullets[j].y < enemies[i].y + enemies[i].height &&
-                        bullets[j].y + bullets[j].height > enemies[i].y) {
+                // Попадание ракет
+                for (let j = 0; j < missiles.length; j++) {
+                    if (missiles[j].x < enemies[i].x + enemies[i].width &&
+                        missiles[j].x + missiles[j].width > enemies[i].x &&
+                        missiles[j].y < enemies[i].y + enemies[i].height &&
+                        missiles[j].y + missiles[j].height > enemies[i].y) {
                         
-                        bullets.splice(j, 1);
-                        enemies[i].health--;
+                        missiles.splice(j, 1);
+                        enemies.splice(i, 1);
+                        kills++;
+                        score += 10;
+                        scoreElement.innerText = score;
+                        killsElement.innerText = kills;
+                        i--;
                         
-                        if (enemies[i].health <= 0) {
-                            const points = enemies[i].type === 'heavy' ? 30 : enemies[i].type === 'fast' ? 20 : 10;
-                            score += points;
-                            kills++;
-                            scoreElement.innerText = score;
-                            killsElement.innerText = kills;
-                            enemies.splice(i, 1);
-                            i--;
-                            
-                            // Новая волна КАЖДЫЕ 10 УБИЙСТВ
-                            if (kills % 10 === 0 && kills > 0) {
-                                wave++;
-                                waveElement.innerText = wave;
-                                statusElement.innerHTML = `🌊 ВОЛНА ${wave}! 🌊`;
-                                setTimeout(() => {
-                                    if (gameRunning) statusElement.innerHTML = '🔫 Уничтожай вражеские танки!';
-                                }, 1500);
-                            }
-                        }
+                        if (navigator.vibrate) navigator.vibrate(50);
                         break;
                     }
                 }
             }
             
-            // Спавн врагов (медленнее)
-            if (enemies.length < 3) {
+            // Спавн врагов
+            if (enemies.length < 4) {
                 enemySpawnCounter++;
                 if (enemySpawnCounter > enemySpawnDelay) {
                     spawnEnemy();
                     enemySpawnCounter = 0;
-                    enemySpawnDelay = Math.max(70, 90 - wave * 2);
+                    enemySpawnDelay = Math.max(35, 45 - Math.floor(kills / 20));
                 }
             }
         }
         
         function draw() {
-            // Фон
-            ctx.fillStyle = '#2a2a3a';
+            // Небо
+            const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+            grad.addColorStop(0, '#1a3a5c');
+            grad.addColorStop(1, '#0a1a2c');
+            ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
             
-            // Земля
-            ctx.fillStyle = '#3a3a4a';
+            // Облака
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.beginPath();
+            ctx.ellipse(100, 100, 50, 30, 0, 0, Math.PI * 2);
+            ctx.ellipse(140, 90, 40, 25, 0, 0, Math.PI * 2);
+            ctx.ellipse(60, 90, 40, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(550, 200, 60, 35, 0, 0, Math.PI * 2);
+            ctx.ellipse(600, 190, 45, 28, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Взлётная полоса
+            ctx.fillStyle = '#3a3a3a';
             ctx.fillRect(0, canvasHeight - 60, canvasWidth, 60);
-            ctx.fillStyle = '#4a4a5a';
+            ctx.fillStyle = '#ffcc00';
             for(let i = 0; i < 20; i++) {
-                ctx.fillRect(i * 40, canvasHeight - 55, 20, 5);
+                ctx.fillRect(i * 40, canvasHeight - 55, 20, 4);
             }
             
-            // Прицел
-            ctx.beginPath();
-            ctx.strokeStyle = '#ffcc00';
-            ctx.lineWidth = 2;
-            ctx.arc(mouseX, mouseY, 10, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(mouseX - 15, mouseY);
-            ctx.lineTo(mouseX - 5, mouseY);
-            ctx.moveTo(mouseX + 5, mouseY);
-            ctx.lineTo(mouseX + 15, mouseY);
-            ctx.moveTo(mouseX, mouseY - 15);
-            ctx.lineTo(mouseX, mouseY - 5);
-            ctx.moveTo(mouseX, mouseY + 5);
-            ctx.lineTo(mouseX, mouseY + 15);
-            ctx.stroke();
-            
-            // Пули
-            for (let bullet of bullets) {
-                ctx.fillStyle = '#ffcc00';
-                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            // Ракеты
+            for (let missile of missiles) {
+                missile.draw();
             }
             
             // Враги
@@ -459,27 +433,37 @@ HTML = '''<!DOCTYPE html>
                 enemy.draw();
             }
             
-            // Танк игрока
+            // Истребитель
             ctx.save();
             ctx.shadowBlur = 0;
-            ctx.fillStyle = '#228B22';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            ctx.fillStyle = '#006400';
-            ctx.fillRect(player.x + 5, player.y + 5, player.width - 10, 10);
-            ctx.fillRect(player.x + 5, player.y + player.height - 15, player.width - 10, 10);
-            ctx.fillStyle = '#444';
-            ctx.fillRect(player.x - 5, player.y + 10, 5, 30);
-            ctx.fillRect(player.x + player.width, player.y + 10, 5, 30);
             
-            // Башня (поворачивается к мышке)
-            const angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
-            ctx.translate(player.x + player.width/2, player.y + player.height/2);
-            ctx.rotate(angle);
-            ctx.fillStyle = '#2E8B57';
-            ctx.fillRect(-12, -12, 24, 24);
-            ctx.fillStyle = '#ffcc00';
-            ctx.fillRect(-3, -20, 6, 15);
-            ctx.restore();
+            // Фюзеляж
+            ctx.fillStyle = '#5a7a5a';
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.width/2, player.y);
+            ctx.lineTo(player.x + player.width - 5, player.y + player.height - 10);
+            ctx.lineTo(player.x + player.width/2, player.y + player.height);
+            ctx.lineTo(player.x + 5, player.y + player.height - 10);
+            ctx.fill();
+            
+            // Крылья
+            ctx.fillStyle = '#4a6a4a';
+            ctx.fillRect(player.x + 5, player.y + 15, 40, 8);
+            ctx.fillRect(player.x + 10, player.y + 25, 30, 6);
+            
+            // Кабина
+            ctx.fillStyle = '#87CEEB';
+            ctx.beginPath();
+            ctx.arc(player.x + player.width/2, player.y + 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(player.x + player.width/2 + 2, player.y + 8, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Двигатель
+            ctx.fillStyle = '#ff6600';
+            ctx.fillRect(player.x + player.width - 8, player.y + 20, 8, 12);
             
             // Полоска здоровья
             ctx.fillStyle = '#ff4444';
@@ -487,22 +471,42 @@ HTML = '''<!DOCTYPE html>
             ctx.fillStyle = '#44ff44';
             ctx.fillRect(player.x, player.y - 10, player.width * (player.health / player.maxHealth), 5);
             
+            ctx.restore();
+            
+            // Прицел
+            ctx.beginPath();
+            ctx.strokeStyle = '#ffcc00';
+            ctx.lineWidth = 2;
+            ctx.arc(mouseX, mouseY, 12, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(mouseX - 18, mouseY);
+            ctx.lineTo(mouseX - 8, mouseY);
+            ctx.moveTo(mouseX + 8, mouseY);
+            ctx.lineTo(mouseX + 18, mouseY);
+            ctx.moveTo(mouseX, mouseY - 18);
+            ctx.lineTo(mouseX, mouseY - 8);
+            ctx.moveTo(mouseX, mouseY + 8);
+            ctx.lineTo(mouseX, mouseY + 18);
+            ctx.stroke();
+            
             // Информация
             ctx.font = 'bold 20px Arial';
             ctx.fillStyle = '#ffcc00';
             ctx.shadowBlur = 3;
-            ctx.fillText(`ВОЛНА ${wave}`, canvasWidth - 100, 40);
-            ctx.font = '12px Arial';
+            ctx.fillText(`СБИТО: ${kills}`, canvasWidth - 130, 40);
+            ctx.font = '14px Arial';
             ctx.fillStyle = '#aaa';
-            ctx.fillText(`До след. волны: ${10 - (kills % 10)}`, canvasWidth - 100, 65);
+            ctx.fillText(`Ракет: ${missiles.length}`, canvasWidth - 130, 70);
             ctx.shadowBlur = 0;
             
             if (!gameRunning && !gameOver) {
-                ctx.font = 'bold 24px Arial';
+                ctx.font = 'bold 28px Arial';
                 ctx.fillStyle = '#fff';
-                ctx.fillText('ТАНКИ БИТВА', canvasWidth / 2 - 100, canvasHeight / 2 - 50);
+                ctx.fillText('✈️ ИСТРЕБИТЕЛЬ ✈️', canvasWidth / 2 - 140, canvasHeight / 2 - 50);
                 ctx.font = '16px Arial';
-                ctx.fillText('Нажмите "НАЧАТЬ БИТВУ"', canvasWidth / 2 - 110, canvasHeight / 2);
+                ctx.fillText('Веди мышкой — лети за курсором', canvasWidth / 2 - 160, canvasHeight / 2);
+                ctx.fillText('Клик — пуск ракеты', canvasWidth / 2 - 80, canvasHeight / 2 + 30);
             }
         }
         
@@ -517,16 +521,16 @@ HTML = '''<!DOCTYPE html>
             gameRunning = true;
             gameOver = false;
             startBtn.style.display = 'none';
-            statusElement.innerHTML = '🔫 Уничтожай вражеские танки!';
+            statusElement.innerHTML = '✈️ Уничтожай вражеские вертолёты!';
             statusElement.style.color = '#aaa';
             
-            // Первые враги
-            setTimeout(() => spawnEnemy(), 500);
-            setTimeout(() => spawnEnemy(), 1500);
+            for(let i = 0; i < 2; i++) {
+                setTimeout(() => spawnEnemy(), i * 800);
+            }
         }
         
         // Управление
-        document.addEventListener('mousemove', (e) => {
+        canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
@@ -540,30 +544,9 @@ HTML = '''<!DOCTYPE html>
             e.preventDefault();
             if (!gameRunning) return;
             if (shootCooldown <= 0) {
-                shoot();
+                shootMissile();
                 shootCooldown = shootDelay;
-                if (navigator.vibrate) navigator.vibrate(20);
-            }
-        });
-        
-        // Движение танка
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
-                leftPressed = true;
-                e.preventDefault();
-            }
-            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
-                rightPressed = true;
-                e.preventDefault();
-            }
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
-                leftPressed = false;
-            }
-            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
-                rightPressed = false;
+                if (navigator.vibrate) navigator.vibrate(30);
             }
         });
         
