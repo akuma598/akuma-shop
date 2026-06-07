@@ -49,7 +49,7 @@ HTML = '''<!DOCTYPE html>
             flex-wrap: wrap;
         }
         
-        .score-box, .health-box, .kills-box {
+        .score-box, .health-box, .kills-box, .wave-box {
             text-align: center;
             background: rgba(0,0,0,0.5);
             padding: 8px 20px;
@@ -57,14 +57,14 @@ HTML = '''<!DOCTYPE html>
             backdrop-filter: blur(10px);
         }
         
-        .score-box span, .health-box span, .kills-box span {
+        .score-box span, .health-box span, .kills-box span, .wave-box span {
             color: #ffcc00;
             font-size: 28px;
             font-weight: bold;
             display: block;
         }
         
-        .score-box p, .health-box p, .kills-box p {
+        .score-box p, .health-box p, .kills-box p, .wave-box p {
             font-size: 11px;
             color: #aaa;
             margin-top: 3px;
@@ -143,6 +143,10 @@ HTML = '''<!DOCTYPE html>
                 <span id="kills">0</span>
                 <p>УНИЧТОЖЕНО</p>
             </div>
+            <div class="wave-box">
+                <span id="wave">1</span>
+                <p>ВОЛНА</p>
+            </div>
             <div class="health-box">
                 <span id="health">❤️ 100</span>
                 <p>ЗДОРОВЬЕ</p>
@@ -158,7 +162,7 @@ HTML = '''<!DOCTYPE html>
         <div class="status" id="status">🔫 Уничтожай вражеские танки!</div>
         
         <div class="footer">
-            <p>🎮 Враги появляются волнами. За каждые 5 убийств — новая волна!</p>
+            <p>🎮 Каждые 10 убийств — новая волна. Стрельба по прицелу!</p>
         </div>
     </div>
     
@@ -179,16 +183,15 @@ HTML = '''<!DOCTYPE html>
             maxHealth: 100
         };
         
-        // Пули
+        // Пули (летят по направлению к прицелу)
         let bullets = [];
-        let bulletSpeed = 8;
         let shootCooldown = 0;
-        let shootDelay = 12;
+        let shootDelay = 15;
         
         // Враги
         let enemies = [];
         let enemySpawnCounter = 0;
-        let enemySpawnDelay = 60;
+        let enemySpawnDelay = 80;
         let wave = 1;
         let kills = 0;
         let score = 0;
@@ -204,6 +207,7 @@ HTML = '''<!DOCTYPE html>
         const scoreElement = document.getElementById('score');
         const killsElement = document.getElementById('kills');
         const healthElement = document.getElementById('health');
+        const waveElement = document.getElementById('wave');
         const startBtn = document.getElementById('startBtn');
         const statusElement = document.getElementById('status');
         
@@ -220,7 +224,7 @@ HTML = '''<!DOCTYPE html>
                 this.height = 45;
                 this.type = type || 'normal';
                 this.health = this.type === 'heavy' ? 3 : 1;
-                this.speed = this.type === 'fast' ? 2.5 : 1.5;
+                this.speed = this.type === 'fast' ? 2 : 1.2;
             }
             
             move() {
@@ -237,7 +241,6 @@ HTML = '''<!DOCTYPE html>
                     ctx.fillStyle = '#660000';
                     ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, 10);
                     ctx.fillRect(this.x + 5, this.y + this.height - 15, this.width - 10, 10);
-                    // Гусеницы
                     ctx.fillStyle = '#444';
                     ctx.fillRect(this.x - 5, this.y + 10, 5, 25);
                     ctx.fillRect(this.x + this.width, this.y + 10, 5, 25);
@@ -286,13 +289,17 @@ HTML = '''<!DOCTYPE html>
             scoreElement.innerText = '0';
             killsElement.innerText = '0';
             healthElement.innerText = '❤️ 100';
+            waveElement.innerText = '1';
         }
         
         function spawnEnemy() {
+            // Ограничиваем количество врагов на экране (максимум 5)
+            if (enemies.length >= 5) return;
+            
             const rand = Math.random();
             let type = 'normal';
-            if (wave >= 3 && rand < 0.3) type = 'heavy';
-            else if (wave >= 2 && rand < 0.5) type = 'fast';
+            if (wave >= 3 && rand < 0.2) type = 'heavy';
+            else if (wave >= 2 && rand < 0.35) type = 'fast';
             
             const x = Math.random() * (canvasWidth - 45);
             enemies.push(new Enemy(x, -45, type));
@@ -300,13 +307,20 @@ HTML = '''<!DOCTYPE html>
         
         function shoot() {
             if (!gameRunning) return;
+            
+            // Направление от танка к прицелу
+            const fromX = player.x + player.width / 2;
+            const fromY = player.y + player.height / 2;
+            const angle = Math.atan2(mouseY - fromY, mouseX - fromX);
+            const speed = 10;
+            
             bullets.push({
-                x: player.x + player.width / 2 - 3,
-                y: player.y - 10,
+                x: fromX - 3,
+                y: fromY - 3,
                 width: 6,
-                height: 12,
-                targetX: mouseX,
-                targetY: mouseY
+                height: 6,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed
             });
         }
         
@@ -322,8 +336,11 @@ HTML = '''<!DOCTYPE html>
             
             // Пули
             for (let i = 0; i < bullets.length; i++) {
-                bullets[i].y -= bulletSpeed;
-                if (bullets[i].y + bullets[i].height < 0) {
+                bullets[i].x += bullets[i].vx;
+                bullets[i].y += bullets[i].vy;
+                
+                if (bullets[i].x < -50 || bullets[i].x > canvasWidth + 50 ||
+                    bullets[i].y < -50 || bullets[i].y > canvasHeight + 50) {
                     bullets.splice(i, 1);
                     i--;
                 }
@@ -339,7 +356,7 @@ HTML = '''<!DOCTYPE html>
                     enemies[i].y < player.y + player.height &&
                     enemies[i].y + enemies[i].height > player.y) {
                     
-                    const damage = enemies[i].type === 'heavy' ? 20 : 10;
+                    const damage = enemies[i].type === 'heavy' ? 15 : 10;
                     player.health -= damage;
                     healthElement.innerText = '❤️ ' + Math.max(0, player.health);
                     enemies.splice(i, 1);
@@ -373,11 +390,13 @@ HTML = '''<!DOCTYPE html>
                             scoreElement.innerText = score;
                             killsElement.innerText = kills;
                             enemies.splice(i, 1);
+                            i--;
                             
-                            // Новая волна
-                            if (kills % 5 === 0 && kills > 0) {
+                            // Новая волна КАЖДЫЕ 10 УБИЙСТВ
+                            if (kills % 10 === 0 && kills > 0) {
                                 wave++;
-                                statusElement.innerHTML = `🌊 ВОЛНА ${wave}! Враги сильнее! 🌊`;
+                                waveElement.innerText = wave;
+                                statusElement.innerHTML = `🌊 ВОЛНА ${wave}! 🌊`;
                                 setTimeout(() => {
                                     if (gameRunning) statusElement.innerHTML = '🔫 Уничтожай вражеские танки!';
                                 }, 1500);
@@ -388,14 +407,13 @@ HTML = '''<!DOCTYPE html>
                 }
             }
             
-            // Спавн врагов
-            let enemiesToSpawn = Math.min(3 + Math.floor(wave / 2), 8);
-            if (enemies.length < enemiesToSpawn) {
+            // Спавн врагов (медленнее)
+            if (enemies.length < 3) {
                 enemySpawnCounter++;
                 if (enemySpawnCounter > enemySpawnDelay) {
                     spawnEnemy();
                     enemySpawnCounter = 0;
-                    enemySpawnDelay = Math.max(40, 60 - wave);
+                    enemySpawnDelay = Math.max(70, 90 - wave * 2);
                 }
             }
         }
@@ -469,14 +487,14 @@ HTML = '''<!DOCTYPE html>
             ctx.fillStyle = '#44ff44';
             ctx.fillRect(player.x, player.y - 10, player.width * (player.health / player.maxHealth), 5);
             
-            // Волна
+            // Информация
             ctx.font = 'bold 20px Arial';
             ctx.fillStyle = '#ffcc00';
             ctx.shadowBlur = 3;
             ctx.fillText(`ВОЛНА ${wave}`, canvasWidth - 100, 40);
             ctx.font = '12px Arial';
             ctx.fillStyle = '#aaa';
-            ctx.fillText(`Убийств: ${kills}`, canvasWidth - 100, 65);
+            ctx.fillText(`До след. волны: ${10 - (kills % 10)}`, canvasWidth - 100, 65);
             ctx.shadowBlur = 0;
             
             if (!gameRunning && !gameOver) {
@@ -503,9 +521,8 @@ HTML = '''<!DOCTYPE html>
             statusElement.style.color = '#aaa';
             
             // Первые враги
-            for(let i = 0; i < 3; i++) {
-                setTimeout(() => spawnEnemy(), i * 500);
-            }
+            setTimeout(() => spawnEnemy(), 500);
+            setTimeout(() => spawnEnemy(), 1500);
         }
         
         // Управление
