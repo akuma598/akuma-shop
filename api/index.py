@@ -8,7 +8,7 @@ HTML = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Террария | 2D Survival</title>
+    <title>Террария | 2D Sandbox</title>
     <style>
         * {
             margin: 0;
@@ -36,7 +36,7 @@ HTML = '''<!DOCTYPE html>
             display: block;
             margin: 0 auto;
             border-radius: 0;
-            cursor: pointer;
+            cursor: crosshair;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
         
@@ -47,8 +47,8 @@ HTML = '''<!DOCTYPE html>
             right: 10px;
             display: flex;
             justify-content: space-between;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.6);
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px);
             border-radius: 10px;
             z-index: 10;
@@ -61,13 +61,13 @@ HTML = '''<!DOCTYPE html>
         
         .ui-box span {
             color: #ffcc00;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
         }
         
         .ui-box p {
             color: #aaa;
-            font-size: 10px;
+            font-size: 9px;
         }
         
         .inventory {
@@ -75,7 +75,7 @@ HTML = '''<!DOCTYPE html>
             bottom: 10px;
             left: 10px;
             right: 10px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
             border-radius: 10px;
             padding: 8px;
@@ -89,12 +89,13 @@ HTML = '''<!DOCTYPE html>
             background: rgba(255,255,255,0.1);
             border: 1px solid #ffcc00;
             border-radius: 8px;
-            padding: 8px 15px;
+            padding: 6px 15px;
             color: white;
             font-size: 12px;
             text-align: center;
             cursor: pointer;
             pointer-events: auto;
+            transition: 0.1s;
         }
         
         .slot.active {
@@ -103,13 +104,17 @@ HTML = '''<!DOCTYPE html>
             border-color: #ffffff;
         }
         
+        .slot:active {
+            transform: scale(0.95);
+        }
+        
         .start-screen {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
@@ -143,21 +148,31 @@ HTML = '''<!DOCTYPE html>
             transform: scale(0.95);
         }
         
+        .controls-hint {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #888;
+            font-size: 10px;
+        }
+        
         @media (max-width: 768px) {
             .game-title { font-size: 28px; }
-            .slot { padding: 5px 10px; font-size: 10px; }
-            .ui-box span { font-size: 16px; }
+            .slot { padding: 4px 10px; font-size: 10px; }
+            .ui-box span { font-size: 14px; }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <canvas id="gameCanvas" width="800" height="450"></canvas>
+        <canvas id="gameCanvas" width="900" height="500"></canvas>
         
         <div class="ui">
             <div class="ui-box">
                 <span id="health">❤️ 100</span>
-                <p>ЗДОРОВЬЕ</p>
+                <p>HP</p>
             </div>
             <div class="ui-box">
                 <span id="wood">🪵 0</span>
@@ -170,16 +185,17 @@ HTML = '''<!DOCTYPE html>
         </div>
         
         <div class="inventory">
-            <div class="slot" data-tool="pickaxe">⛏️ КИРКА</div>
+            <div class="slot active" data-tool="pickaxe">⛏️ КИРКА</div>
             <div class="slot" data-tool="axe">🪓 ТОПОР</div>
             <div class="slot" data-tool="sword">⚔️ МЕЧ</div>
             <div class="slot" data-tool="block">🧱 БЛОК</div>
         </div>
         
+        <div class="controls-hint">🎮 A/D — ДВИЖЕНИЕ | ПРОБЕЛ — ПРЫЖОК | МЫШЬ — ПРИЦЕЛ | ЛКМ — ДЕЙСТВИЕ</div>
+        
         <div class="start-screen" id="startScreen">
             <div class="game-title">🌍 ТЕРРАРИЯ 2D 🌍</div>
             <button class="start-btn" id="startBtn">▶ СТАРТ</button>
-            <p style="color:#888; margin-top:20px; font-size:12px;">🔨 ДОБЫВАЙ РЕСУРСЫ | ⚔️ СРАЖАЙСЯ С МОНСТРАМИ | 🧱 СТРОЙ</p>
         </div>
     </div>
 
@@ -187,16 +203,15 @@ HTML = '''<!DOCTYPE html>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        const canvasWidth = 800;
-        const canvasHeight = 450;
-        const groundY = 350;
+        const canvasWidth = 900;
+        const canvasHeight = 500;
         
-        // Игрок
+        // ИГРОК
         let player = {
-            x: 100,
-            y: groundY - 35,
-            width: 30,
-            height: 35,
+            x: 200,
+            y: 300,
+            width: 28,
+            height: 32,
             vx: 0,
             vy: 0,
             onGround: true,
@@ -206,27 +221,28 @@ HTML = '''<!DOCTYPE html>
             tool: 'pickaxe'
         };
         
-        // Мир (блоки)
+        // МИР
         let world = [];
-        let worldWidth = 200;
+        let worldWidth = 250;
         let cameraX = 0;
         
-        // Ресурсы
-        let wood = 0;
-        let stone = 0;
+        // РЕСУРСЫ
+        let woodCount = 10;
+        let stoneCount = 5;
         
-        // Враги
+        // ВРАГИ
         let enemies = [];
         
-        // Частицы
+        // ЧАСТИЦЫ
         let particles = [];
         
-        // Управление
+        // ПРИЦЕЛ
+        let mouseX = 0, mouseY = 0;
+        
+        // УПРАВЛЕНИЕ
         let leftPressed = false;
         let rightPressed = false;
         let jumpRequested = false;
-        let attackRequested = false;
-        let mouseX = 0, mouseY = 0;
         
         const healthElement = document.getElementById('health');
         const woodElement = document.getElementById('wood');
@@ -234,50 +250,119 @@ HTML = '''<!DOCTYPE html>
         const startScreen = document.getElementById('startScreen');
         const startBtn = document.getElementById('startBtn');
         
-        // Генерация мира
+        woodElement.innerText = woodCount;
+        stoneElement.innerText = stoneCount;
+        
+        // ГЕНЕРАЦИЯ МИРА (как в Террарии)
         function generateWorld() {
             world = [];
-            let surfaceHeight = groundY - 50;
+            let surfaceHeight = 350;
             
             for(let x = 0; x < worldWidth; x++) {
-                let height = surfaceHeight + Math.sin(x * 0.05) * 15;
-                height += Math.random() * 5;
+                let height = surfaceHeight + Math.sin(x * 0.03) * 20;
+                height += Math.sin(x * 0.1) * 8;
                 height = Math.floor(height);
                 
-                for(let y = height; y < canvasHeight; y += 30) {
-                    let type = 'dirt';
-                    if(y > height + 60) type = 'stone';
-                    if(y === height) type = 'grass';
-                    if(x > 50 && x < 70 && y > height - 60 && y < height) type = 'wood';
-                    
+                // Трава на поверхности
+                world.push({
+                    x: x * 32,
+                    y: height,
+                    width: 32,
+                    height: 32,
+                    type: 'grass',
+                    health: 2
+                });
+                
+                // Земля под травой
+                for(let y = height + 32; y < height + 96; y += 32) {
                     world.push({
-                        x: x * 30,
+                        x: x * 32,
                         y: y,
-                        width: 30,
-                        height: 30,
+                        width: 32,
+                        height: 32,
+                        type: 'dirt',
+                        health: 2
+                    });
+                }
+                
+                // Камень глубже
+                for(let y = height + 128; y < canvasHeight + 100; y += 32) {
+                    let type = Math.random() < 0.7 ? 'stone' : 'dirt';
+                    world.push({
+                        x: x * 32,
+                        y: y,
+                        width: 32,
+                        height: 32,
                         type: type,
-                        health: type === 'stone' ? 5 : type === 'wood' ? 3 : 2
+                        health: type === 'stone' ? 5 : 2
+                    });
+                }
+                
+                // Деревья
+                if(Math.random() < 0.08 && height > 300 && height < 380) {
+                    let treeX = x * 32;
+                    let treeY = height - 32;
+                    for(let t = 0; t < 3; t++) {
+                        world.push({
+                            x: treeX,
+                            y: treeY - t * 32,
+                            width: 32,
+                            height: 32,
+                            type: 'wood',
+                            health: 3
+                        });
+                    }
+                    // Листва
+                    world.push({
+                        x: treeX - 32,
+                        y: treeY - 96,
+                        width: 32,
+                        height: 32,
+                        type: 'leaf',
+                        health: 1
+                    });
+                    world.push({
+                        x: treeX + 32,
+                        y: treeY - 96,
+                        width: 32,
+                        height: 32,
+                        type: 'leaf',
+                        health: 1
+                    });
+                    world.push({
+                        x: treeX,
+                        y: treeY - 128,
+                        width: 32,
+                        height: 32,
+                        type: 'leaf',
+                        health: 1
                     });
                 }
             }
         }
         
-        // Класс врага
+        // ВРАГ (слизень)
         class Enemy {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
                 this.width = 28;
-                this.height = 28;
-                this.health = 30;
-                this.speed = 0.8;
-                this.type = 'slime';
+                this.height = 24;
+                this.health = 25;
+                this.maxHealth = 25;
+                this.speed = 1;
+                this.jumpTimer = 0;
             }
             
             update() {
                 let dx = player.x - this.x;
-                if(Math.abs(dx) > 5) {
+                if(Math.abs(dx) > 10) {
                     this.x += Math.sign(dx) * this.speed;
+                }
+                
+                this.jumpTimer++;
+                if(this.jumpTimer > 40 && this.y > 300) {
+                    this.jumpTimer = 0;
                 }
                 
                 // Гравитация
@@ -294,31 +379,38 @@ HTML = '''<!DOCTYPE html>
             }
             
             draw() {
-                ctx.fillStyle = '#44aa44';
-                ctx.fillRect(this.x - cameraX, this.y, this.width, this.height);
-                ctx.fillStyle = '#228822';
-                ctx.fillRect(this.x - cameraX + 5, this.y + 5, 18, 8);
+                // Тело слизня
+                ctx.fillStyle = '#6ab04c';
+                ctx.beginPath();
+                ctx.ellipse(this.x - cameraX + this.width/2, this.y + this.height/2, 14, 12, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#4a8a2c';
+                ctx.beginPath();
+                ctx.ellipse(this.x - cameraX + this.width/2, this.y + this.height/2 + 4, 10, 6, 0, 0, Math.PI*2);
+                ctx.fill();
+                
+                // Глаза
                 ctx.fillStyle = 'white';
-                ctx.fillRect(this.x - cameraX + 6, this.y + 12, 5, 5);
-                ctx.fillRect(this.x - cameraX + 16, this.y + 12, 5, 5);
+                ctx.fillRect(this.x - cameraX + 6, this.y + 8, 6, 6);
+                ctx.fillRect(this.x - cameraX + 16, this.y + 8, 6, 6);
                 ctx.fillStyle = 'black';
-                ctx.fillRect(this.x - cameraX + 7, this.y + 13, 3, 3);
-                ctx.fillRect(this.x - cameraX + 17, this.y + 13, 3, 3);
+                ctx.fillRect(this.x - cameraX + 7, this.y + 9, 3, 3);
+                ctx.fillRect(this.x - cameraX + 17, this.y + 9, 3, 3);
                 
                 // Полоска здоровья
                 ctx.fillStyle = '#ff4444';
                 ctx.fillRect(this.x - cameraX, this.y - 8, this.width, 4);
                 ctx.fillStyle = '#44ff44';
-                ctx.fillRect(this.x - cameraX, this.y - 8, this.width * (this.health / 30), 4);
+                ctx.fillRect(this.x - cameraX, this.y - 8, this.width * (this.health / this.maxHealth), 4);
             }
         }
         
         function spawnEnemy() {
-            let x = player.x + 300 + Math.random() * 200;
+            let x = player.x + 400 + Math.random() * 200;
             let y = 0;
             for(let block of world) {
                 if(block.x < x && block.x + block.width > x) {
-                    y = block.y - 30;
+                    y = block.y - 28;
                     break;
                 }
             }
@@ -326,32 +418,38 @@ HTML = '''<!DOCTYPE html>
         }
         
         function attack() {
-            let toolDamage = {
-                pickaxe: 15,
-                axe: 20,
+            let damage = {
+                pickaxe: 12,
+                axe: 18,
                 sword: 25,
                 block: 5
             };
-            let damage = toolDamage[player.tool] || 10;
+            let dmg = damage[player.tool] || 10;
+            let range = 55;
+            
+            let centerX = player.x + player.width/2;
+            let centerY = player.y + player.height/2;
+            
+            // Для мыши
+            let mouseWorldX = mouseX + cameraX;
+            let mouseWorldY = mouseY;
             
             // Добыча блоков
-            let attackRange = 50;
             for(let i = 0; i < world.length; i++) {
-                let block = world[i];
-                let dx = (player.x + player.width/2) - (block.x + block.width/2);
-                let dy = (player.y + player.height/2) - (block.y + block.height/2);
+                let b = world[i];
+                let dx = centerX - (b.x + b.width/2);
+                let dy = centerY - (b.y + b.height/2);
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 
-                if(dist < attackRange) {
-                    block.health -= damage;
-                    addParticle(block.x + block.width/2, block.y + block.height/2, '#ffffff');
+                if(dist < range) {
+                    b.health -= dmg;
+                    addParticle(b.x + b.width/2, b.y + b.height/2, '#ffffff');
                     
-                    if(block.health <= 0) {
-                        if(block.type === 'wood') wood++;
-                        if(block.type === 'stone') stone++;
-                        if(block.type === 'dirt' || block.type === 'grass') {}
-                        woodElement.innerText = wood;
-                        stoneElement.innerText = stone;
+                    if(b.health <= 0) {
+                        if(b.type === 'wood') woodCount++;
+                        if(b.type === 'stone') stoneCount++;
+                        woodElement.innerText = woodCount;
+                        stoneElement.innerText = stoneCount;
                         world.splice(i,1);
                     }
                     break;
@@ -360,15 +458,16 @@ HTML = '''<!DOCTYPE html>
             
             // Атака врагов
             for(let i = 0; i < enemies.length; i++) {
-                let dx = (player.x + player.width/2) - (enemies[i].x + enemies[i].width/2);
-                let dy = (player.y + player.height/2) - (enemies[i].y + enemies[i].height/2);
+                let e = enemies[i];
+                let dx = centerX - (e.x + e.width/2);
+                let dy = centerY - (e.y + e.height/2);
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 
-                if(dist < attackRange) {
-                    enemies[i].health -= damage;
-                    addParticle(enemies[i].x + enemies[i].width/2, enemies[i].y + enemies[i].height/2, '#ff4444');
+                if(dist < range) {
+                    e.health -= dmg;
+                    addParticle(e.x + e.width/2, e.y + e.height/2, '#ff6666');
                     
-                    if(enemies[i].health <= 0) {
+                    if(e.health <= 0) {
                         enemies.splice(i,1);
                     }
                     break;
@@ -377,44 +476,39 @@ HTML = '''<!DOCTYPE html>
         }
         
         function placeBlock() {
-            if(wood < 5) return;
+            if(woodCount < 5) return;
             
-            let placeRange = 60;
+            let range = 60;
+            let centerX = player.x + player.width/2;
+            let centerY = player.y + player.height/2;
             let mouseWorldX = mouseX + cameraX;
+            let mouseWorldY = mouseY;
             
-            for(let block of world) {
-                let dx = (player.x + player.width/2) - (block.x + block.width/2);
-                let dy = (player.y + player.height/2) - (block.y + block.height/2);
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if(dist < placeRange) {
-                    let newX = Math.floor(mouseWorldX / 30) * 30;
-                    let newY = Math.floor(mouseY / 30) * 30;
-                    
-                    let exists = world.some(b => b.x === newX && b.y === newY);
-                    if(!exists && newY < groundY - 30) {
-                        world.push({
-                            x: newX,
-                            y: newY,
-                            width: 30,
-                            height: 30,
-                            type: 'wood',
-                            health: 5
-                        });
-                        wood -= 5;
-                        woodElement.innerText = wood;
-                    }
-                    break;
-                }
+            // Находим ближайший блок для размещения
+            let placeX = Math.floor(mouseWorldX / 32) * 32;
+            let placeY = Math.floor(mouseWorldY / 32) * 32;
+            
+            let exists = world.some(b => b.x === placeX && b.y === placeY);
+            if(!exists && Math.abs(centerX - placeX) < range && Math.abs(centerY - placeY) < range) {
+                world.push({
+                    x: placeX,
+                    y: placeY,
+                    width: 32,
+                    height: 32,
+                    type: 'wood',
+                    health: 3
+                });
+                woodCount -= 5;
+                woodElement.innerText = woodCount;
             }
         }
         
         function addParticle(x, y, color) {
-            for(let i=0;i<5;i++) {
+            for(let i=0;i<6;i++) {
                 particles.push({
-                    x: x, y: y, vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4 - 2,
-                    life: 20, color: color, size: Math.random() * 3 + 2
+                    x: x, y: y, vx: (Math.random() - 0.5) * 3,
+                    vy: (Math.random() - 0.5) * 3 - 2,
+                    life: 25, color: color, size: Math.random() * 3 + 2
                 });
             }
         }
@@ -423,17 +517,18 @@ HTML = '''<!DOCTYPE html>
             if(!gameRunning) return;
             
             // Движение
-            if(leftPressed) player.vx = -3;
-            else if(rightPressed) player.vx = 3;
+            if(leftPressed) player.vx = -3.5;
+            else if(rightPressed) player.vx = 3.5;
             else player.vx *= 0.8;
             
             player.x += player.vx;
             
             // Гравитация
-            player.vy += 0.8;
+            player.vy += 0.7;
             player.y += player.vy;
             player.onGround = false;
             
+            // Коллизия с блоками
             for(let block of world) {
                 if(player.x < block.x + block.width &&
                     player.x + player.width > block.x &&
@@ -452,20 +547,15 @@ HTML = '''<!DOCTYPE html>
             }
             
             if(jumpRequested && player.onGround) {
-                player.vy = -11;
+                player.vy = -10;
                 player.onGround = false;
                 jumpRequested = false;
             }
             
-            if(attackRequested) {
-                attack();
-                attackRequested = false;
-            }
-            
             // Камера
-            cameraX = player.x - 300;
+            cameraX = player.x - 350;
             if(cameraX < 0) cameraX = 0;
-            if(cameraX > worldWidth * 30 - canvasWidth) cameraX = worldWidth * 30 - canvasWidth;
+            if(cameraX > worldWidth * 32 - canvasWidth) cameraX = worldWidth * 32 - canvasWidth;
             
             // Враги
             for(let i=0;i<enemies.length;i++) {
@@ -475,7 +565,7 @@ HTML = '''<!DOCTYPE html>
                 let dy = Math.abs(player.y - enemies[i].y);
                 if(dx < 35 && dy < 35) {
                     if(player.invincible <= 0) {
-                        player.health -= 10;
+                        player.health -= 12;
                         healthElement.innerText = '❤️ ' + player.health;
                         player.invincible = 40;
                         
@@ -488,13 +578,13 @@ HTML = '''<!DOCTYPE html>
             }
             
             // Спавн врагов
-            if(enemies.length < 3 && Math.random() < 0.01) {
+            if(enemies.length < 3 && Math.random() < 0.008) {
                 spawnEnemy();
             }
             
             if(player.invincible > 0) player.invincible--;
             
-            // Партиклы
+            // Частицы
             for(let i=0;i<particles.length;i++) {
                 particles[i].x += particles[i].vx;
                 particles[i].y += particles[i].vy;
@@ -511,59 +601,152 @@ HTML = '''<!DOCTYPE html>
             
             // Небо
             const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-            grad.addColorStop(0, '#1a1a3a');
-            grad.addColorStop(1, '#2a2a4a');
+            grad.addColorStop(0, '#0a0a2a');
+            grad.addColorStop(1, '#1a1a3a');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
             
-            // Блоки
+            // Облака
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.beginPath();
+            ctx.ellipse(200, 60, 50, 30, 0, 0, Math.PI*2);
+            ctx.ellipse(250, 50, 40, 25, 0, 0, Math.PI*2);
+            ctx.ellipse(160, 50, 40, 25, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            // БЛОКИ МИРА
             for(let block of world) {
                 if(block.x + block.width > cameraX && block.x < cameraX + canvasWidth) {
-                    if(block.type === 'grass') ctx.fillStyle = '#4a8a3a';
-                    else if(block.type === 'dirt') ctx.fillStyle = '#8B5A2B';
-                    else if(block.type === 'stone') ctx.fillStyle = '#888888';
-                    else if(block.type === 'wood') ctx.fillStyle = '#8B6914';
-                    else ctx.fillStyle = '#8B5A2B';
-                    
-                    ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
-                    ctx.strokeStyle = '#000000';
+                    if(block.type === 'grass') {
+                        ctx.fillStyle = '#5a9e3a';
+                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
+                        ctx.fillStyle = '#4a8e2a';
+                        ctx.fillRect(block.x - cameraX, block.y + block.height - 8, block.width, 8);
+                    } else if(block.type === 'dirt') {
+                        ctx.fillStyle = '#8B5A2B';
+                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
+                        ctx.fillStyle = '#7B4A1B';
+                        for(let i=0;i<3;i++) {
+                            ctx.fillRect(block.x - cameraX + 5 + i*10, block.y + 10, 6, 4);
+                        }
+                    } else if(block.type === 'stone') {
+                        ctx.fillStyle = '#888888';
+                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
+                        ctx.fillStyle = '#666666';
+                        for(let i=0;i<4;i++) {
+                            ctx.fillRect(block.x - cameraX + 4 + i*7, block.y + 8 + (i%2)*16, 4, 4);
+                        }
+                    } else if(block.type === 'wood') {
+                        ctx.fillStyle = '#8B6914';
+                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
+                        ctx.fillStyle = '#6B4914';
+                        ctx.fillRect(block.x - cameraX + 8, block.y, 4, block.height);
+                        ctx.fillRect(block.x - cameraX + 20, block.y, 4, block.height);
+                    } else if(block.type === 'leaf') {
+                        ctx.fillStyle = '#4a8e3a';
+                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
+                        ctx.fillStyle = '#3a7e2a';
+                        for(let i=0;i<4;i++) {
+                            ctx.fillRect(block.x - cameraX + 4 + i*6, block.y + 8, 4, 4);
+                        }
+                    }
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
                     ctx.strokeRect(block.x - cameraX, block.y, block.width, block.height);
                 }
             }
             
-            // Враги
+            // ВРАГИ
             for(let enemy of enemies) {
                 enemy.draw();
             }
             
-            // Частицы
+            // ЧАСТИЦЫ
             for(let p of particles) {
                 ctx.fillStyle = p.color;
                 ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
             }
             
-            // Игрок
-            ctx.fillStyle = player.invincible > 0 && Math.floor(Date.now()/50)%2===0 ? '#ffffff' : '#3366ff';
+            // ИГРОК (персонаж как в Террарии)
+            ctx.save();
+            if(player.invincible > 0 && Math.floor(Date.now()/50)%2===0) {
+                ctx.fillStyle = '#ffffff';
+            } else {
+                const grad = ctx.createLinearGradient(player.x - cameraX, player.y, player.x - cameraX + player.width, player.y + player.height);
+                grad.addColorStop(0, '#3366ff');
+                grad.addColorStop(1, '#2255dd');
+                ctx.fillStyle = grad;
+            }
             ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
+            
+            // Голова
             ctx.fillStyle = '#ffcc99';
-            ctx.fillRect(player.x - cameraX + 5, player.y - 8, 20, 10);
-            ctx.fillStyle = 'white';
-            ctx.fillRect(player.x - cameraX + 8, player.y - 5, 5, 5);
-            ctx.fillRect(player.x - cameraX + 18, player.y - 5, 5, 5);
-            ctx.fillStyle = 'black';
-            ctx.fillRect(player.x - cameraX + 9, player.y - 4, 3, 3);
-            ctx.fillRect(player.x - cameraX + 19, player.y - 4, 3, 3);
+            ctx.fillRect(player.x - cameraX + 4, player.y - 10, 20, 12);
             
-            // Инструмент в руке
-            let toolIcon = player.tool === 'pickaxe' ? '⛏️' : player.tool === 'axe' ? '🪓' : player.tool === 'sword' ? '⚔️' : '🧱';
-            ctx.font = '20px Arial';
-            ctx.fillStyle = 'white';
-            ctx.fillText(toolIcon, player.x - cameraX + 5, player.y + 25);
+            // Волосы
+            ctx.fillStyle = '#664422';
+            ctx.fillRect(player.x - cameraX + 6, player.y - 14, 16, 6);
             
-            // Интерфейс
+            // Глаза
+            if(player.facingRight) {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(player.x - cameraX + 18, player.y - 6, 5, 5);
+                ctx.fillStyle = 'black';
+                ctx.fillRect(player.x - cameraX + 19, player.y - 5, 3, 3);
+            } else {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(player.x - cameraX + 6, player.y - 6, 5, 5);
+                ctx.fillStyle = 'black';
+                ctx.fillRect(player.x - cameraX + 7, player.y - 5, 3, 3);
+            }
+            
+            // Меч/инструмент в руке
+            if(player.tool === 'sword') {
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(player.x - cameraX + (player.facingRight ? 25 : -10), player.y + 10, 20, 4);
+                ctx.fillStyle = '#aaaaaa';
+                ctx.fillRect(player.x - cameraX + (player.facingRight ? 40 : -20), player.y + 8, 8, 8);
+            } else if(player.tool === 'pickaxe') {
+                ctx.fillStyle = '#8B6914';
+                ctx.fillRect(player.x - cameraX + (player.facingRight ? 25 : -10), player.y + 10, 18, 4);
+                ctx.fillRect(player.x - cameraX + (player.facingRight ? 38 : -15), player.y + 6, 6, 12);
+            } else if(player.tool === 'axe') {
+                ctx.fillStyle = '#8B6914';
+                ctx.fillRect(player.x - cameraX + (player.facingRight ? 25 : -10), player.y + 10, 16, 4);
+                ctx.fillStyle = '#aaaaaa';
+                ctx.fillRect(player.x - cameraX + (player.facingRight ? 36 : -13), player.y + 4, 10, 10);
+            }
+            
+            // Ноги
+            ctx.fillStyle = '#2255dd';
+            ctx.fillRect(player.x - cameraX + 5, player.y + player.height - 6, 8, 8);
+            ctx.fillRect(player.x - cameraX + 16, player.y + player.height - 6, 8, 8);
+            
+            ctx.restore();
+            
+            // ПРИЦЕЛ
+            ctx.beginPath();
+            ctx.strokeStyle = '#ffcc00';
+            ctx.lineWidth = 2;
+            ctx.arc(mouseX, mouseY, 8, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(mouseX - 15, mouseY);
+            ctx.lineTo(mouseX - 5, mouseY);
+            ctx.moveTo(mouseX + 5, mouseY);
+            ctx.lineTo(mouseX + 15, mouseY);
+            ctx.moveTo(mouseX, mouseY - 15);
+            ctx.lineTo(mouseX, mouseY - 5);
+            ctx.moveTo(mouseX, mouseY + 5);
+            ctx.lineTo(mouseX, mouseY + 15);
+            ctx.stroke();
+            
+            // Информация об инструменте
             ctx.font = 'bold 12px monospace';
-            ctx.fillStyle = 'white';
-            ctx.fillText(`🔨 ${player.tool.toUpperCase()}`, canvasWidth - 100, 50);
+            ctx.fillStyle = '#ffcc00';
+            ctx.shadowBlur = 3;
+            let toolName = player.tool === 'pickaxe' ? 'КИРКА' : player.tool === 'axe' ? 'ТОПОР' : player.tool === 'sword' ? 'МЕЧ' : 'БЛОК';
+            ctx.fillText(`🔨 ${toolName}`, canvasWidth - 100, 40);
+            ctx.shadowBlur = 0;
         }
         
         function gameLoop() {
@@ -572,7 +755,7 @@ HTML = '''<!DOCTYPE html>
             requestAnimationFrame(gameLoop);
         }
         
-        // Управление
+        // УПРАВЛЕНИЕ
         document.addEventListener('keydown', (e) => {
             if(!gameRunning && e.code === 'Space') {
                 startBtn.click();
@@ -588,23 +771,21 @@ HTML = '''<!DOCTYPE html>
             if(e.code === 'KeyD') rightPressed = false;
         });
         
-        canvas.addEventListener('click', (e) => {
-            if(!gameRunning) return;
-            const rect = canvas.getBoundingClientRect();
-            mouseX = (e.clientX - rect.left) * (canvasWidth / rect.width);
-            mouseY = (e.clientY - rect.top) * (canvasHeight / rect.height);
-            
-            if(player.tool === 'block') placeBlock();
-            else attackRequested = true;
-        });
-        
+        // МЫШЬ
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             mouseX = (e.clientX - rect.left) * (canvasWidth / rect.width);
             mouseY = (e.clientY - rect.top) * (canvasHeight / rect.height);
+            player.facingRight = mouseX > canvasWidth/2;
         });
         
-        // Выбор инструмента
+        canvas.addEventListener('click', (e) => {
+            if(!gameRunning) return;
+            if(player.tool === 'block') placeBlock();
+            else attack();
+        });
+        
+        // ВЫБОР ИНСТРУМЕНТА
         document.querySelectorAll('.slot').forEach(slot => {
             slot.addEventListener('click', () => {
                 document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
@@ -616,13 +797,15 @@ HTML = '''<!DOCTYPE html>
         function startGame() {
             generateWorld();
             enemies = [];
+            particles = [];
             player.health = 100;
-            wood = 5;
-            stone = 0;
-            player.x = 100;
+            woodCount = 10;
+            stoneCount = 5;
+            player.x = 200;
+            player.y = 300;
             healthElement.innerText = '❤️ 100';
-            woodElement.innerText = '5';
-            stoneElement.innerText = '0';
+            woodElement.innerText = woodCount;
+            stoneElement.innerText = stoneCount;
             gameRunning = true;
             startScreen.style.display = 'none';
             
