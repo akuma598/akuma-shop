@@ -8,7 +8,7 @@ HTML = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NEON DASH | Хардкорная аркада</title>
+    <title>Криворученко Дэш | Хардкорная аркада</title>
     <style>
         * {
             margin: 0;
@@ -95,6 +95,7 @@ HTML = '''<!DOCTYPE html>
             text-shadow: 0 0 20px #00ffff, 0 0 40px #0066ff;
             margin-bottom: 20px;
             letter-spacing: 5px;
+            text-align: center;
         }
         
         .start-btn {
@@ -150,7 +151,7 @@ HTML = '''<!DOCTYPE html>
         </div>
         
         <div class="start-screen" id="startScreen">
-            <div class="game-title">⚡ NEON DASH ⚡</div>
+            <div class="game-title">🎮 КРИВОРУЧЕНКО ДЭШ 🎮</div>
             <button class="start-btn" id="startBtn">▶ СТАРТ</button>
             <div class="instructions">🔥 ТАПАЙ / ПРОБЕЛ — ПРЫЖОК | НЕ ВРЕЗАЙСЯ В ПРЕПЯТСТВИЯ 🔥</div>
         </div>
@@ -165,33 +166,28 @@ HTML = '''<!DOCTYPE html>
         const groundY = 330;
         
         let score = 0;
-        let bestScore = localStorage.getItem('neonBest') || 0;
+        let bestScore = localStorage.getItem('krivoruchenkoBest') || 0;
         let gameRunning = false;
-        let gameSpeed = 6;
-        let speedMultiplier = 1;
+        let gameSpeed = 5;
         
-        // Игрок (квадратик с глазками)
+        // ИГРОК (дальше от препятствий)
         let player = {
-            x: 100,
+            x: 150,  // ← дальше от края (было 100, стало 150)
             y: groundY - 30,
-            width: 30,
-            height: 30,
+            width: 28,
+            height: 28,
             vy: 0,
             onGround: true,
             rotation: 0,
             trail: []
         };
         
-        // Препятствия
         let obstacles = [];
         let frameCounter = 0;
         let particles = [];
-        let nextObstacle = 60;
         
-        // Параллакс
-        let bgOffset = 0;
+        // Звёзды
         let stars = [];
-        
         for(let i=0;i<150;i++) {
             stars.push({
                 x: Math.random() * canvasWidth,
@@ -213,97 +209,93 @@ HTML = '''<!DOCTYPE html>
                 this.x = x;
                 this.type = type;
                 this.passed = false;
-                this.width = 25;
-                this.height = 35;
+                this.width = 20;   // ← УЖЕ (было 25-30)
+                this.height = 28;  // ← НИЖЕ
                 
                 if(type === 'spike') {
-                    this.width = 25;
-                    this.height = 25;
-                    this.y = groundY - 25;
-                } else if(type === 'block') {
-                    this.width = 30;
-                    this.height = 40;
-                    this.y = groundY - 40;
-                } else if(type === 'double') {
                     this.width = 20;
-                    this.height = 35;
-                    this.y = groundY - 35;
-                    this.second = true;
+                    this.height = 20;
+                    this.y = groundY - 20;
+                } else if(type === 'block') {
+                    this.width = 22;
+                    this.height = 32;
+                    this.y = groundY - 32;
+                } else if(type === 'double') {
+                    this.width = 18;
+                    this.height = 28;
+                    this.y = groundY - 28;
                 } else {
-                    this.width = 28;
-                    this.height = 38;
-                    this.y = groundY - 38;
+                    this.width = 20;
+                    this.height = 30;
+                    this.y = groundY - 30;
                 }
             }
             
             draw() {
                 if(this.type === 'spike') {
-                    // Шипы
                     ctx.fillStyle = '#ff3366';
                     for(let i=0;i<3;i++) {
                         ctx.beginPath();
-                        ctx.moveTo(this.x + i*9, this.y+this.height);
-                        ctx.lineTo(this.x + i*9 + 4, this.y);
-                        ctx.lineTo(this.x + i*9 + 8, this.y+this.height);
+                        ctx.moveTo(this.x + i*7, this.y+this.height);
+                        ctx.lineTo(this.x + i*7 + 3, this.y);
+                        ctx.lineTo(this.x + i*7 + 6, this.y+this.height);
                         ctx.fill();
                     }
                 } else if(this.type === 'block') {
-                    // Куб с градиентом
                     const grad = ctx.createLinearGradient(this.x, this.y, this.x+this.width, this.y+this.height);
                     grad.addColorStop(0, '#ff0066');
                     grad.addColorStop(1, '#6600ff');
                     ctx.fillStyle = grad;
                     ctx.fillRect(this.x, this.y, this.width, this.height);
                     ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(this.x+5, this.y+5, 5, 5);
-                    ctx.fillRect(this.x+this.width-10, this.y+this.height-10, 5, 5);
+                    ctx.fillRect(this.x+4, this.y+4, 3, 3);
+                    ctx.fillRect(this.x+this.width-7, this.y+this.height-7, 3, 3);
                 } else if(this.type === 'double') {
                     ctx.fillStyle = '#ffaa00';
                     ctx.fillRect(this.x, this.y, this.width, this.height);
-                    ctx.fillRect(this.x+this.width+5, this.y, this.width, this.height);
+                    ctx.fillRect(this.x+this.width+4, this.y, this.width, this.height);
                 } else {
                     ctx.fillStyle = '#00ffff';
                     ctx.fillRect(this.x, this.y, this.width, this.height);
                     ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(this.x+5, this.y+5, 5, 5);
+                    ctx.fillRect(this.x+4, this.y+4, 3, 3);
                 }
             }
             
             update() {
-                this.x -= gameSpeed * speedMultiplier;
+                this.x -= gameSpeed;
             }
         }
         
         function addParticle(x, y, color) {
-            for(let i=0;i<8;i++) {
+            for(let i=0;i<6;i++) {
                 particles.push({
-                    x: x, y: y, vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6 - 3,
-                    life: 30, color: color, size: Math.random() * 4 + 2
+                    x: x, y: y, vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5 - 2,
+                    life: 25, color: color, size: Math.random() * 3 + 2
                 });
             }
         }
         
         function addTrail() {
-            player.trail.push({ x: player.x + player.width/2, y: player.y + player.height/2, life: 15 });
-            if(player.trail.length > 15) player.trail.shift();
+            player.trail.push({ x: player.x + player.width/2, y: player.y + player.height/2, life: 12 });
+            if(player.trail.length > 12) player.trail.shift();
         }
         
         function spawnObstacle() {
-            const types = ['spike', 'block', 'normal', 'double', 'block'];
+            const types = ['spike', 'block', 'normal', 'normal'];
             const type = types[Math.floor(Math.random() * types.length)];
             obstacles.push(new Obstacle(canvasWidth, type));
             
-            // Двойное препятствие иногда
-            if(Math.random() < 0.3 && type !== 'double') {
-                obstacles.push(new Obstacle(canvasWidth + 40, 'spike'));
+            // Редкое двойное препятствие
+            if(Math.random() < 0.15 && type !== 'double') {
+                obstacles.push(new Obstacle(canvasWidth + 35, 'spike'));
             }
         }
         
         function resetGame() {
             score = 0;
-            gameSpeed = 6;
-            speedMultiplier = 1;
+            gameSpeed = 5;
             obstacles = [];
             particles = [];
             player.trail = [];
@@ -319,7 +311,7 @@ HTML = '''<!DOCTYPE html>
             if(!gameRunning) return;
             
             // Гравитация
-            player.vy += 0.8;
+            player.vy += 0.7;  // ← чуть легче
             player.y += player.vy;
             
             if(player.y >= groundY - player.height) {
@@ -330,27 +322,24 @@ HTML = '''<!DOCTYPE html>
                 player.onGround = false;
             }
             
-            // Вращение при прыжке
             if(!player.onGround) {
-                player.rotation += 0.2;
+                player.rotation += 0.15;
             } else {
                 player.rotation = 0;
             }
             
-            // Трейл при беге
             if(player.onGround && gameRunning) {
                 addTrail();
             }
             
-            // Спавн препятствий
+            // Спавн препятствий (реже)
             frameCounter++;
-            let spawnDelay = Math.max(45, 70 - Math.floor(score / 200));
+            let spawnDelay = Math.max(55, 85 - Math.floor(score / 300));
             if(frameCounter > spawnDelay) {
                 spawnObstacle();
                 frameCounter = 0;
             }
             
-            // Обновление препятствий и коллизии
             for(let i=0;i<obstacles.length;i++) {
                 obstacles[i].update();
                 
@@ -363,7 +352,7 @@ HTML = '''<!DOCTYPE html>
                     gameRunning = false;
                     if(score > bestScore) {
                         bestScore = score;
-                        localStorage.setItem('neonBest', bestScore);
+                        localStorage.setItem('krivoruchenkoBest', bestScore);
                         bestElement.innerText = bestScore;
                     }
                     startScreen.style.display = 'flex';
@@ -371,17 +360,16 @@ HTML = '''<!DOCTYPE html>
                     return;
                 }
                 
-                // Подсчёт очков
                 if(!obstacles[i].passed && obstacles[i].x + obstacles[i].width < player.x) {
                     obstacles[i].passed = true;
                     score += 10;
                     scoreElement.innerText = score;
                     
-                    // Увеличение скорости каждые 100 очков
-                    speedMultiplier = 1 + Math.floor(score / 300) * 0.2;
-                    if(speedMultiplier > 2) speedMultiplier = 2;
+                    // Увеличение скорости (плавное)
+                    gameSpeed = 5 + Math.floor(score / 300);
+                    if(gameSpeed > 12) gameSpeed = 12;
                     
-                    addParticle(obstacles[i].x, obstacles[i].y, '#00ff00');
+                    addParticle(obstacles[i].x + obstacles[i].width/2, obstacles[i].y, '#00ff00');
                 }
                 
                 if(obstacles[i].x + obstacles[i].width < 0) {
@@ -390,7 +378,6 @@ HTML = '''<!DOCTYPE html>
                 }
             }
             
-            // Партиклы
             for(let i=0;i<particles.length;i++) {
                 particles[i].x += particles[i].vx;
                 particles[i].y += particles[i].vy;
@@ -401,7 +388,6 @@ HTML = '''<!DOCTYPE html>
                 }
             }
             
-            // Трейл
             for(let i=0;i<player.trail.length;i++) {
                 player.trail[i].life--;
                 if(player.trail[i].life <= 0) {
@@ -409,30 +395,27 @@ HTML = '''<!DOCTYPE html>
                     i--;
                 }
             }
-            
-            // Параллакс
-            bgOffset = (bgOffset + gameSpeed * speedMultiplier) % canvasWidth;
         }
         
         function draw() {
             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
             
-            // Небо с градиентом
+            // Небо
             const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
             grad.addColorStop(0, '#050520');
             grad.addColorStop(1, '#0a0a3a');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
             
-            // Звёзды с мерцанием
+            // Звёзды
             for(let star of stars) {
-                ctx.fillStyle = `rgba(255,255,255,${0.5 + Math.sin(Date.now()*0.002)*0.3})`;
+                ctx.fillStyle = `rgba(255,255,255,${0.4 + Math.sin(Date.now()*0.002)*0.3})`;
                 ctx.fillRect(star.x, star.y, star.size, star.size);
             }
             
             // Луна
             ctx.fillStyle = '#ffeedd';
-            ctx.shadowBlur = 30;
+            ctx.shadowBlur = 25;
             ctx.shadowColor = '#00ffff';
             ctx.beginPath();
             ctx.arc(700, 60, 35, 0, Math.PI*2);
@@ -443,19 +426,19 @@ HTML = '''<!DOCTYPE html>
             ctx.fill();
             ctx.shadowBlur = 0;
             
-            // Земля с неоновой подсветкой
+            // Земля
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, groundY, canvasWidth, canvasHeight - groundY);
             
-            // Неоновые полоски на земле
+            // Неоновые полоски
             for(let i=0;i<20;i++) {
                 ctx.fillStyle = `rgba(0,255,255,${0.3 + Math.sin(Date.now()*0.005 + i)*0.2})`;
-                ctx.fillRect(i*50 + (bgOffset%50), groundY-3, 30, 3);
+                ctx.fillRect(i*50, groundY-3, 25, 3);
             }
             
-            // Препятствия с неоновым свечением
+            // Препятствия
             for(let obs of obstacles) {
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 8;
                 ctx.shadowColor = '#00ffff';
                 obs.draw();
             }
@@ -463,9 +446,9 @@ HTML = '''<!DOCTYPE html>
             
             // Трейл
             for(let t of player.trail) {
-                ctx.fillStyle = `rgba(0,255,255,${t.life/15})`;
+                ctx.fillStyle = `rgba(0,255,255,${t.life/12})`;
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, 8, 0, Math.PI*2);
+                ctx.arc(t.x, t.y, 6, 0, Math.PI*2);
                 ctx.fill();
             }
             
@@ -475,52 +458,42 @@ HTML = '''<!DOCTYPE html>
                 ctx.fillRect(p.x, p.y, p.size, p.size);
             }
             
-            // Игрок (неоновый куб с глазками)
+            // Игрок
             ctx.save();
             ctx.translate(player.x + player.width/2, player.y + player.height/2);
             ctx.rotate(player.rotation);
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 12;
             ctx.shadowColor = '#00ffff';
             
-            // Тело
-            const gradPlayer = ctx.createLinearGradient(-15, -15, 15, 15);
+            const gradPlayer = ctx.createLinearGradient(-14, -14, 14, 14);
             gradPlayer.addColorStop(0, '#00ffff');
             gradPlayer.addColorStop(1, '#0066ff');
             ctx.fillStyle = gradPlayer;
-            ctx.fillRect(-15, -15, 30, 30);
+            ctx.fillRect(-14, -14, 28, 28);
             
-            // Глаза
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(-8, -5, 6, 6);
-            ctx.fillRect(2, -5, 6, 6);
+            ctx.fillRect(-7, -4, 5, 5);
+            ctx.fillRect(2, -4, 5, 5);
             ctx.fillStyle = '#000000';
-            ctx.fillRect(-6, -4, 3, 3);
-            ctx.fillRect(4, -4, 3, 3);
+            ctx.fillRect(-5, -3, 3, 3);
+            ctx.fillRect(4, -3, 3, 3);
             
-            // Улыбка
             ctx.beginPath();
-            ctx.arc(0, 5, 8, 0.1, Math.PI - 0.1);
+            ctx.arc(0, 5, 7, 0.1, Math.PI - 0.1);
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
             ctx.stroke();
             
             ctx.restore();
             
-            // Эффект скорости (линии)
-            if(gameRunning && gameSpeed * speedMultiplier > 8) {
-                ctx.fillStyle = 'rgba(0,255,255,0.2)';
-                for(let i=0;i<10;i++) {
-                    ctx.fillRect(player.x - 10 - i*6, player.y + 10, 4, 15);
-                }
-            }
-            
-            // Счёт в неоне
-            ctx.font = 'bold 20px "Courier New"';
+            // Надпись
+            ctx.font = 'bold 14px "Courier New"';
             ctx.fillStyle = '#00ffff';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#00ffff';
-            ctx.fillText('⚡ ' + score, canvasWidth - 100, 50);
-            ctx.fillText('🏆 ' + bestScore, canvasWidth - 100, 85);
+            ctx.shadowBlur = 5;
+            ctx.fillText('КРИВОРУЧЕНКО ДЭШ', canvasWidth - 170, 30);
+            ctx.font = 'bold 20px "Courier New"';
+            ctx.fillText('⚡ ' + score, canvasWidth - 100, 70);
+            ctx.fillText('🏆 ' + bestScore, canvasWidth - 100, 100);
             ctx.shadowBlur = 0;
         }
         
@@ -534,18 +507,16 @@ HTML = '''<!DOCTYPE html>
         let jumpRequested = false;
         
         document.addEventListener('keydown', (e) => {
-            if(!gameRunning && e.code === 'Space') {
+            if(!gameRunning && (e.code === 'Space' || e.code === 'ArrowUp')) {
                 e.preventDefault();
                 startBtn.click();
                 return;
             }
-            if(e.code === 'Space' || e.code === 'ArrowUp') {
+            if((e.code === 'Space' || e.code === 'ArrowUp') && gameRunning && player.onGround) {
                 e.preventDefault();
-                if(gameRunning && player.onGround) {
-                    player.vy = -10;
-                    player.onGround = false;
-                    addParticle(player.x + player.width/2, player.y + player.height, '#00ffff');
-                }
+                player.vy = -9;
+                player.onGround = false;
+                addParticle(player.x + player.width/2, player.y + player.height, '#00ffff');
             }
         });
         
@@ -556,7 +527,7 @@ HTML = '''<!DOCTYPE html>
                 return;
             }
             if(gameRunning && player.onGround) {
-                player.vy = -10;
+                player.vy = -9;
                 player.onGround = false;
                 addParticle(player.x + player.width/2, player.y + player.height, '#00ffff');
             }
@@ -568,7 +539,7 @@ HTML = '''<!DOCTYPE html>
                 return;
             }
             if(gameRunning && player.onGround) {
-                player.vy = -10;
+                player.vy = -9;
                 player.onGround = false;
                 addParticle(player.x + player.width/2, player.y + player.height, '#00ffff');
             }
