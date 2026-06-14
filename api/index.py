@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify
 import os
 
 app = Flask(__name__)
@@ -23,7 +23,6 @@ HTML = '''
             color: #1d1d1f;
         }
         
-        /* Header */
         .header {
             background: #ffffff;
             backdrop-filter: blur(20px);
@@ -72,7 +71,6 @@ HTML = '''
             text-align: center;
         }
         
-        /* Фильтры */
         .filters {
             max-width: 1200px;
             margin: 20px auto;
@@ -98,7 +96,6 @@ HTML = '''
             border-color: #1d1d1f;
         }
         
-        /* Товары */
         .products {
             max-width: 1200px;
             margin: 0 auto;
@@ -179,7 +176,6 @@ HTML = '''
             background: #333;
         }
         
-        /* Корзина (модалка) */
         .cart-modal {
             display: none;
             position: fixed;
@@ -296,7 +292,6 @@ HTML = '''
             display: block;
         }
         
-        /* Модалка товара */
         .product-modal {
             display: none;
             position: fixed;
@@ -325,7 +320,6 @@ HTML = '''
             cursor: pointer;
         }
         
-        /* Footer */
         .footer {
             background: #1d1d1f;
             color: #888;
@@ -371,7 +365,6 @@ HTML = '''
         <p style="margin-top: 10px; font-size: 12px;">Быстрая доставка | Официальная гарантия</p>
     </div>
     
-    <!-- Корзина -->
     <div class="overlay" id="overlay" onclick="closeCart()"></div>
     <div class="cart-modal" id="cartModal">
         <div class="cart-header">
@@ -388,7 +381,6 @@ HTML = '''
         </div>
     </div>
     
-    <!-- Модалка товара -->
     <div class="product-modal" id="productModal">
         <div class="product-modal-content">
             <span class="close-modal" onclick="closeProductModal()">✕</span>
@@ -397,7 +389,6 @@ HTML = '''
     </div>
 
     <script>
-        // ТОВАРЫ
         const products = [
             {
                 id: 1,
@@ -407,7 +398,7 @@ HTML = '''
                 oldPrice: 29990,
                 color: "Темно-серый",
                 image: "🎧",
-                description: "Активное шумоподавление, прозрачный режим, пространственное аудио, адаптивная эквалайзер. До 6 часов работы от одного заряда. Влагостойкость IPX4."
+                description: "Активное шумоподавление, прозрачный режим, пространственное аудио, адаптивная эквалайзер. До 6 часов работы."
             },
             {
                 id: 2,
@@ -417,7 +408,7 @@ HTML = '''
                 oldPrice: 17990,
                 color: "Темно-серый",
                 image: "🎧",
-                description: "Новый дизайн, улучшенный звук, сенсорное управление, быстрая зарядка. Идеально для повседневного использования."
+                description: "Новый дизайн, улучшенный звук, сенсорное управление, быстрая зарядка."
             },
             {
                 id: 3,
@@ -427,7 +418,7 @@ HTML = '''
                 oldPrice: 39990,
                 color: "Черный",
                 image: "🎧",
-                description: "Лучшее шумоподавление на рынке, премиальный дизайн, 30 часов работы, быстрая зарядка."
+                description: "Лучшее шумоподавление, 30 часов работы, быстрая зарядка."
             },
             {
                 id: 4,
@@ -437,7 +428,7 @@ HTML = '''
                 oldPrice: 109990,
                 color: "Натуральный титан",
                 image: "📱",
-                description: "Чип A17 Pro, титановый корпус, 48 МП камера, USB-C, Always-On дисплей."
+                description: "Чип A17 Pro, титановый корпус, 48 МП камера, USB-C."
             },
             {
                 id: 5,
@@ -447,7 +438,7 @@ HTML = '''
                 oldPrice: 99990,
                 color: "Титан",
                 image: "📱",
-                description: "200 МП камера, S Pen, ИИ-функции, огромный яркий дисплей."
+                description: "200 МП камера, S Pen, ИИ-функции."
             },
             {
                 id: 6,
@@ -457,7 +448,7 @@ HTML = '''
                 oldPrice: 229990,
                 color: "Космический серый",
                 image: "💻",
-                description: "Чип M3 Pro, 16 ГБ RAM, 512 ГБ SSD, дисплей Liquid Retina XDR, батарея на весь день."
+                description: "Чип M3 Pro, 16 ГБ RAM, 512 ГБ SSD, дисплей Liquid Retina XDR."
             },
             {
                 id: 7,
@@ -467,7 +458,7 @@ HTML = '''
                 oldPrice: 6990,
                 color: "Белый",
                 image: "🔋",
-                description: "Беспроводная зарядка 15 Вт, магнитная фиксация, компактный дизайн."
+                description: "Беспроводная зарядка 15 Вт, магнитная фиксация."
             },
             {
                 id: 8,
@@ -477,15 +468,31 @@ HTML = '''
                 oldPrice: 79990,
                 color: "Титан",
                 image: "⌚",
-                description: "49-мм корпус из титана, яркий дисплей, GPS, водонепроницаемость, до 36 часов работы."
+                description: "49-мм корпус из титана, GPS, водонепроницаемость."
             }
         ];
         
         let cart = JSON.parse(localStorage.getItem('cart')) || {};
         let currentCategory = 'all';
         
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+        
+        function getCategoryName(cat) {
+            const names = {
+                headphones: 'Наушники',
+                phones: 'Смартфоны',
+                laptops: 'Ноутбуки',
+                accessories: 'Аксессуары'
+            };
+            return names[cat] || cat;
+        }
+        
         function renderProducts() {
             const container = document.getElementById('products');
+            if (!container) return;
+            
             const filtered = currentCategory === 'all' 
                 ? products 
                 : products.filter(p => p.category === currentCategory);
@@ -510,20 +517,6 @@ HTML = '''
             container.innerHTML = html;
         }
         
-        function getCategoryName(cat) {
-            const names = {
-                headphones: 'Наушники',
-                phones: 'Смартфоны',
-                laptops: 'Ноутбуки',
-                accessories: 'Аксессуары'
-            };
-            return names[cat] || cat;
-        }
-        
-        function formatPrice(price) {
-            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-        }
-        
         function addToCart(productId) {
             if (!cart[productId]) {
                 cart[productId] = { quantity: 1 };
@@ -532,6 +525,7 @@ HTML = '''
             }
             saveCart();
             updateCartCount();
+            renderCart();
         }
         
         function removeFromCart(productId) {
@@ -551,7 +545,8 @@ HTML = '''
             for (let id in cart) {
                 count += cart[id].quantity;
             }
-            document.getElementById('cartCount').innerText = count;
+            const cartCountEl = document.getElementById('cartCount');
+            if (cartCountEl) cartCountEl.innerText = count;
         }
         
         function saveCart() {
@@ -560,6 +555,8 @@ HTML = '''
         
         function renderCart() {
             const container = document.getElementById('cartItems');
+            if (!container) return;
+            
             let total = 0;
             let html = '';
             
@@ -591,18 +588,23 @@ HTML = '''
             }
             
             container.innerHTML = html;
-            document.getElementById('cartTotal').innerHTML = formatPrice(total) + ' ₽';
+            const cartTotalEl = document.getElementById('cartTotal');
+            if (cartTotalEl) cartTotalEl.innerHTML = formatPrice(total) + ' ₽';
         }
         
         function openCart() {
             renderCart();
-            document.getElementById('cartModal').classList.add('open');
-            document.getElementById('overlay').classList.add('open');
+            const cartModal = document.getElementById('cartModal');
+            const overlay = document.getElementById('overlay');
+            if (cartModal) cartModal.classList.add('open');
+            if (overlay) overlay.classList.add('open');
         }
         
         function closeCart() {
-            document.getElementById('cartModal').classList.remove('open');
-            document.getElementById('overlay').classList.remove('open');
+            const cartModal = document.getElementById('cartModal');
+            const overlay = document.getElementById('overlay');
+            if (cartModal) cartModal.classList.remove('open');
+            if (overlay) overlay.classList.remove('open');
         }
         
         function openProductModal(productId) {
@@ -610,8 +612,9 @@ HTML = '''
             if (!product) return;
             
             const inCart = cart[productId] ? cart[productId].quantity : 0;
-            
             const modalContent = document.getElementById('modalContent');
+            if (!modalContent) return;
+            
             modalContent.innerHTML = `
                 <div style="text-align: center;">
                     <div style="font-size: 80px; margin: 20px 0;">${product.image}</div>
@@ -630,13 +633,17 @@ HTML = '''
                 </div>
             `;
             
-            document.getElementById('productModal').classList.add('open');
-            document.getElementById('overlay').classList.add('open');
+            const productModal = document.getElementById('productModal');
+            const overlay = document.getElementById('overlay');
+            if (productModal) productModal.classList.add('open');
+            if (overlay) overlay.classList.add('open');
         }
         
         function closeProductModal() {
-            document.getElementById('productModal').classList.remove('open');
-            document.getElementById('overlay').classList.remove('open');
+            const productModal = document.getElementById('productModal');
+            const overlay = document.getElementById('overlay');
+            if (productModal) productModal.classList.remove('open');
+            if (overlay) overlay.classList.remove('open');
         }
         
         function checkout() {
@@ -654,16 +661,22 @@ HTML = '''
         
         // Фильтры
         document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', function() {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentCategory = btn.dataset.category;
+                this.classList.add('active');
+                currentCategory = this.dataset.category;
                 renderProducts();
             });
         });
         
         renderProducts();
         updateCartCount();
+        
+        // Закрытие модалки по клику на overlay
+        document.getElementById('overlay')?.addEventListener('click', () => {
+            closeCart();
+            closeProductModal();
+        });
     </script>
 </body>
 </html>
