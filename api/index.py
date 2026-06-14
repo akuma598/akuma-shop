@@ -1,825 +1,673 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 import os
 
 app = Flask(__name__)
 
-HTML = '''<!DOCTYPE html>
+HTML = '''
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Террария | 2D Sandbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>TechStore | Магазин электроники</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
         
         body {
-            background: #0a0a1a;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+        
+        /* Header */
+        .header {
+            background: #ffffff;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 20px;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            font-family: 'Courier New', monospace;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #1d1d1f, #4a4a4a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            background: #ff4444;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        /* Фильтры */
+        .filters {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        
+        .filter-btn.active {
+            background: #1d1d1f;
+            color: white;
+            border-color: #1d1d1f;
+        }
+        
+        /* Товары */
+        .products {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        
+        .product-image {
+            background: #f5f5f7;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+        
+        .product-info {
+            padding: 16px;
+        }
+        
+        .product-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .product-category {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        
+        .product-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+        
+        .product-old-price {
+            font-size: 14px;
+            color: #888;
+            text-decoration: line-through;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+        
+        .add-to-cart {
+            background: #1d1d1f;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 30px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .add-to-cart:hover {
+            background: #333;
+        }
+        
+        /* Корзина (модалка) */
+        .cart-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+            z-index: 200;
+            flex-direction: column;
+        }
+        
+        .cart-modal.open {
+            display: flex;
+        }
+        
+        .cart-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            background: #f5f5f7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+        
+        .cart-item-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .cart-item-price {
+            color: #ff4444;
+            font-weight: bold;
+        }
+        
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .qty-btn {
+            background: #f0f0f0;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .cart-total {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        .checkout-btn {
+            background: #1d1d1f;
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 150;
+        }
+        
+        .overlay.open {
+            display: block;
+        }
+        
+        /* Модалка товара */
+        .product-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            border-radius: 24px;
+            z-index: 250;
             overflow: hidden;
         }
         
-        .game-container {
-            position: relative;
-        }
-        
-        canvas {
+        .product-modal.open {
             display: block;
-            margin: 0 auto;
-            border-radius: 0;
-            cursor: crosshair;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
         
-        .ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 15px;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
-            border-radius: 10px;
-            z-index: 10;
-            pointer-events: none;
+        .product-modal-content {
+            padding: 24px;
         }
         
-        .ui-box {
-            text-align: center;
-        }
-        
-        .ui-box span {
-            color: #ffcc00;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .ui-box p {
-            color: #aaa;
-            font-size: 9px;
-        }
-        
-        .inventory {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            border-radius: 10px;
-            padding: 8px;
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            z-index: 10;
-        }
-        
-        .slot {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #ffcc00;
-            border-radius: 8px;
-            padding: 6px 15px;
-            color: white;
-            font-size: 12px;
-            text-align: center;
+        .close-modal {
+            float: right;
+            font-size: 24px;
             cursor: pointer;
-            pointer-events: auto;
-            transition: 0.1s;
         }
         
-        .slot.active {
-            background: #ffcc00;
-            color: #1a1a2e;
-            border-color: #ffffff;
-        }
-        
-        .slot:active {
-            transform: scale(0.95);
-        }
-        
-        .start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(15px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        
-        .game-title {
-            font-size: 48px;
-            font-weight: bold;
-            color: #ffcc00;
-            text-shadow: 0 0 20px #ffcc00;
-            margin-bottom: 20px;
-        }
-        
-        .start-btn {
-            background: linear-gradient(135deg, #ffcc00, #ff9900);
-            border: none;
-            padding: 15px 50px;
-            border-radius: 50px;
-            color: #1a1a2e;
-            font-weight: bold;
-            font-size: 20px;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 30px;
-        }
-        
-        .start-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .controls-hint {
-            position: absolute;
-            bottom: 80px;
-            left: 0;
-            right: 0;
-            text-align: center;
+        /* Footer */
+        .footer {
+            background: #1d1d1f;
             color: #888;
-            font-size: 10px;
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
         }
         
         @media (max-width: 768px) {
-            .game-title { font-size: 28px; }
-            .slot { padding: 4px 10px; font-size: 10px; }
-            .ui-box span { font-size: 14px; }
+            .products {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 15px;
+            }
+            .cart-modal {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <canvas id="gameCanvas" width="900" height="500"></canvas>
-        
-        <div class="ui">
-            <div class="ui-box">
-                <span id="health">❤️ 100</span>
-                <p>HP</p>
-            </div>
-            <div class="ui-box">
-                <span id="wood">🪵 0</span>
-                <p>ДРЕВЕСИНА</p>
-            </div>
-            <div class="ui-box">
-                <span id="stone">🪨 0</span>
-                <p>КАМЕНЬ</p>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">⚡ TECHSTORE</div>
+            <div class="cart-icon" onclick="openCart()">
+                🛒
+                <span class="cart-count" id="cartCount">0</span>
             </div>
         </div>
-        
-        <div class="inventory">
-            <div class="slot active" data-tool="pickaxe">⛏️ КИРКА</div>
-            <div class="slot" data-tool="axe">🪓 ТОПОР</div>
-            <div class="slot" data-tool="sword">⚔️ МЕЧ</div>
-            <div class="slot" data-tool="block">🧱 БЛОК</div>
+    </div>
+    
+    <div class="filters">
+        <button class="filter-btn active" data-category="all">Все товары</button>
+        <button class="filter-btn" data-category="headphones">🎧 Наушники</button>
+        <button class="filter-btn" data-category="phones">📱 Смартфоны</button>
+        <button class="filter-btn" data-category="accessories">🔌 Аксессуары</button>
+        <button class="filter-btn" data-category="laptops">💻 Ноутбуки</button>
+    </div>
+    
+    <div class="products" id="products"></div>
+    
+    <div class="footer">
+        <p>© 2025 TechStore — Магазин качественной электроники</p>
+        <p style="margin-top: 10px; font-size: 12px;">Быстрая доставка | Официальная гарантия</p>
+    </div>
+    
+    <!-- Корзина -->
+    <div class="overlay" id="overlay" onclick="closeCart()"></div>
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-header">
+            <h3>🛒 Корзина</h3>
+            <span style="font-size: 24px; cursor: pointer;" onclick="closeCart()">✕</span>
         </div>
-        
-        <div class="controls-hint">🎮 A/D — ДВИЖЕНИЕ | ПРОБЕЛ — ПРЫЖОК | МЫШЬ — ПРИЦЕЛ | ЛКМ — ДЕЙСТВИЕ</div>
-        
-        <div class="start-screen" id="startScreen">
-            <div class="game-title">🌍 ТЕРРАРИЯ 2D 🌍</div>
-            <button class="start-btn" id="startBtn">▶ СТАРТ</button>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-total">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <span>Итого:</span>
+                <span id="cartTotal" style="font-size: 22px; font-weight: bold;">0 ₽</span>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">Оформить заказ</button>
+        </div>
+    </div>
+    
+    <!-- Модалка товара -->
+    <div class="product-modal" id="productModal">
+        <div class="product-modal-content">
+            <span class="close-modal" onclick="closeProductModal()">✕</span>
+            <div id="modalContent"></div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        const canvasWidth = 900;
-        const canvasHeight = 500;
-        
-        // ИГРОК
-        let player = {
-            x: 200,
-            y: 300,
-            width: 28,
-            height: 32,
-            vx: 0,
-            vy: 0,
-            onGround: true,
-            facingRight: true,
-            health: 100,
-            invincible: 0,
-            tool: 'pickaxe'
-        };
-        
-        // МИР
-        let world = [];
-        let worldWidth = 250;
-        let cameraX = 0;
-        
-        // РЕСУРСЫ
-        let woodCount = 10;
-        let stoneCount = 5;
-        
-        // ВРАГИ
-        let enemies = [];
-        
-        // ЧАСТИЦЫ
-        let particles = [];
-        
-        // ПРИЦЕЛ
-        let mouseX = 0, mouseY = 0;
-        
-        // УПРАВЛЕНИЕ
-        let leftPressed = false;
-        let rightPressed = false;
-        let jumpRequested = false;
-        
-        const healthElement = document.getElementById('health');
-        const woodElement = document.getElementById('wood');
-        const stoneElement = document.getElementById('stone');
-        const startScreen = document.getElementById('startScreen');
-        const startBtn = document.getElementById('startBtn');
-        
-        woodElement.innerText = woodCount;
-        stoneElement.innerText = stoneCount;
-        
-        // ГЕНЕРАЦИЯ МИРА (как в Террарии)
-        function generateWorld() {
-            world = [];
-            let surfaceHeight = 350;
-            
-            for(let x = 0; x < worldWidth; x++) {
-                let height = surfaceHeight + Math.sin(x * 0.03) * 20;
-                height += Math.sin(x * 0.1) * 8;
-                height = Math.floor(height);
-                
-                // Трава на поверхности
-                world.push({
-                    x: x * 32,
-                    y: height,
-                    width: 32,
-                    height: 32,
-                    type: 'grass',
-                    health: 2
-                });
-                
-                // Земля под травой
-                for(let y = height + 32; y < height + 96; y += 32) {
-                    world.push({
-                        x: x * 32,
-                        y: y,
-                        width: 32,
-                        height: 32,
-                        type: 'dirt',
-                        health: 2
-                    });
-                }
-                
-                // Камень глубже
-                for(let y = height + 128; y < canvasHeight + 100; y += 32) {
-                    let type = Math.random() < 0.7 ? 'stone' : 'dirt';
-                    world.push({
-                        x: x * 32,
-                        y: y,
-                        width: 32,
-                        height: 32,
-                        type: type,
-                        health: type === 'stone' ? 5 : 2
-                    });
-                }
-                
-                // Деревья
-                if(Math.random() < 0.08 && height > 300 && height < 380) {
-                    let treeX = x * 32;
-                    let treeY = height - 32;
-                    for(let t = 0; t < 3; t++) {
-                        world.push({
-                            x: treeX,
-                            y: treeY - t * 32,
-                            width: 32,
-                            height: 32,
-                            type: 'wood',
-                            health: 3
-                        });
-                    }
-                    // Листва
-                    world.push({
-                        x: treeX - 32,
-                        y: treeY - 96,
-                        width: 32,
-                        height: 32,
-                        type: 'leaf',
-                        health: 1
-                    });
-                    world.push({
-                        x: treeX + 32,
-                        y: treeY - 96,
-                        width: 32,
-                        height: 32,
-                        type: 'leaf',
-                        health: 1
-                    });
-                    world.push({
-                        x: treeX,
-                        y: treeY - 128,
-                        width: 32,
-                        height: 32,
-                        type: 'leaf',
-                        health: 1
-                    });
-                }
+        // ТОВАРЫ
+        const products = [
+            {
+                id: 1,
+                name: "AirPods Pro 2",
+                category: "headphones",
+                price: 24990,
+                oldPrice: 29990,
+                color: "Темно-серый",
+                image: "🎧",
+                description: "Активное шумоподавление, прозрачный режим, пространственное аудио, адаптивная эквалайзер. До 6 часов работы от одного заряда. Влагостойкость IPX4."
+            },
+            {
+                id: 2,
+                name: "AirPods 4",
+                category: "headphones",
+                price: 14990,
+                oldPrice: 17990,
+                color: "Темно-серый",
+                image: "🎧",
+                description: "Новый дизайн, улучшенный звук, сенсорное управление, быстрая зарядка. Идеально для повседневного использования."
+            },
+            {
+                id: 3,
+                name: "Sony WH-1000XM5",
+                category: "headphones",
+                price: 34990,
+                oldPrice: 39990,
+                color: "Черный",
+                image: "🎧",
+                description: "Лучшее шумоподавление на рынке, премиальный дизайн, 30 часов работы, быстрая зарядка."
+            },
+            {
+                id: 4,
+                name: "iPhone 15 Pro",
+                category: "phones",
+                price: 99990,
+                oldPrice: 109990,
+                color: "Натуральный титан",
+                image: "📱",
+                description: "Чип A17 Pro, титановый корпус, 48 МП камера, USB-C, Always-On дисплей."
+            },
+            {
+                id: 5,
+                name: "Samsung Galaxy S24 Ultra",
+                category: "phones",
+                price: 89990,
+                oldPrice: 99990,
+                color: "Титан",
+                image: "📱",
+                description: "200 МП камера, S Pen, ИИ-функции, огромный яркий дисплей."
+            },
+            {
+                id: 6,
+                name: "MacBook Pro 14",
+                category: "laptops",
+                price: 199990,
+                oldPrice: 229990,
+                color: "Космический серый",
+                image: "💻",
+                description: "Чип M3 Pro, 16 ГБ RAM, 512 ГБ SSD, дисплей Liquid Retina XDR, батарея на весь день."
+            },
+            {
+                id: 7,
+                name: "Belkin MagSafe Power Bank",
+                category: "accessories",
+                price: 4990,
+                oldPrice: 6990,
+                color: "Белый",
+                image: "🔋",
+                description: "Беспроводная зарядка 15 Вт, магнитная фиксация, компактный дизайн."
+            },
+            {
+                id: 8,
+                name: "Apple Watch Ultra 2",
+                category: "accessories",
+                price: 72990,
+                oldPrice: 79990,
+                color: "Титан",
+                image: "⌚",
+                description: "49-мм корпус из титана, яркий дисплей, GPS, водонепроницаемость, до 36 часов работы."
             }
+        ];
+        
+        let cart = JSON.parse(localStorage.getItem('cart')) || {};
+        let currentCategory = 'all';
+        
+        function renderProducts() {
+            const container = document.getElementById('products');
+            const filtered = currentCategory === 'all' 
+                ? products 
+                : products.filter(p => p.category === currentCategory);
+            
+            let html = '';
+            for (let product of filtered) {
+                html += `
+                    <div class="product-card" onclick="openProductModal(${product.id})">
+                        <div class="product-image">${product.image}</div>
+                        <div class="product-info">
+                            <div class="product-title">${product.name}</div>
+                            <div class="product-category">${product.color} | ${getCategoryName(product.category)}</div>
+                            <div class="product-price">
+                                ${formatPrice(product.price)} ₽
+                                ${product.oldPrice ? `<span class="product-old-price">${formatPrice(product.oldPrice)} ₽</span>` : ''}
+                            </div>
+                            <button class="add-to-cart" onclick="event.stopPropagation(); addToCart(${product.id})">В корзину</button>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
         }
         
-        // ВРАГ (слизень)
-        class Enemy {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.width = 28;
-                this.height = 24;
-                this.health = 25;
-                this.maxHealth = 25;
-                this.speed = 1;
-                this.jumpTimer = 0;
-            }
-            
-            update() {
-                let dx = player.x - this.x;
-                if(Math.abs(dx) > 10) {
-                    this.x += Math.sign(dx) * this.speed;
-                }
-                
-                this.jumpTimer++;
-                if(this.jumpTimer > 40 && this.y > 300) {
-                    this.jumpTimer = 0;
-                }
-                
-                // Гравитация
-                this.y += 3;
-                for(let block of world) {
-                    if(this.x < block.x + block.width &&
-                        this.x + this.width > block.x &&
-                        this.y + this.height > block.y &&
-                        this.y < block.y + block.height) {
-                        this.y = block.y - this.height;
-                        break;
-                    }
-                }
-            }
-            
-            draw() {
-                // Тело слизня
-                ctx.fillStyle = '#6ab04c';
-                ctx.beginPath();
-                ctx.ellipse(this.x - cameraX + this.width/2, this.y + this.height/2, 14, 12, 0, 0, Math.PI*2);
-                ctx.fill();
-                ctx.fillStyle = '#4a8a2c';
-                ctx.beginPath();
-                ctx.ellipse(this.x - cameraX + this.width/2, this.y + this.height/2 + 4, 10, 6, 0, 0, Math.PI*2);
-                ctx.fill();
-                
-                // Глаза
-                ctx.fillStyle = 'white';
-                ctx.fillRect(this.x - cameraX + 6, this.y + 8, 6, 6);
-                ctx.fillRect(this.x - cameraX + 16, this.y + 8, 6, 6);
-                ctx.fillStyle = 'black';
-                ctx.fillRect(this.x - cameraX + 7, this.y + 9, 3, 3);
-                ctx.fillRect(this.x - cameraX + 17, this.y + 9, 3, 3);
-                
-                // Полоска здоровья
-                ctx.fillStyle = '#ff4444';
-                ctx.fillRect(this.x - cameraX, this.y - 8, this.width, 4);
-                ctx.fillStyle = '#44ff44';
-                ctx.fillRect(this.x - cameraX, this.y - 8, this.width * (this.health / this.maxHealth), 4);
-            }
-        }
-        
-        function spawnEnemy() {
-            let x = player.x + 400 + Math.random() * 200;
-            let y = 0;
-            for(let block of world) {
-                if(block.x < x && block.x + block.width > x) {
-                    y = block.y - 28;
-                    break;
-                }
-            }
-            enemies.push(new Enemy(x, y));
-        }
-        
-        function attack() {
-            let damage = {
-                pickaxe: 12,
-                axe: 18,
-                sword: 25,
-                block: 5
+        function getCategoryName(cat) {
+            const names = {
+                headphones: 'Наушники',
+                phones: 'Смартфоны',
+                laptops: 'Ноутбуки',
+                accessories: 'Аксессуары'
             };
-            let dmg = damage[player.tool] || 10;
-            let range = 55;
-            
-            let centerX = player.x + player.width/2;
-            let centerY = player.y + player.height/2;
-            
-            // Для мыши
-            let mouseWorldX = mouseX + cameraX;
-            let mouseWorldY = mouseY;
-            
-            // Добыча блоков
-            for(let i = 0; i < world.length; i++) {
-                let b = world[i];
-                let dx = centerX - (b.x + b.width/2);
-                let dy = centerY - (b.y + b.height/2);
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if(dist < range) {
-                    b.health -= dmg;
-                    addParticle(b.x + b.width/2, b.y + b.height/2, '#ffffff');
-                    
-                    if(b.health <= 0) {
-                        if(b.type === 'wood') woodCount++;
-                        if(b.type === 'stone') stoneCount++;
-                        woodElement.innerText = woodCount;
-                        stoneElement.innerText = stoneCount;
-                        world.splice(i,1);
-                    }
-                    break;
-                }
-            }
-            
-            // Атака врагов
-            for(let i = 0; i < enemies.length; i++) {
-                let e = enemies[i];
-                let dx = centerX - (e.x + e.width/2);
-                let dy = centerY - (e.y + e.height/2);
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if(dist < range) {
-                    e.health -= dmg;
-                    addParticle(e.x + e.width/2, e.y + e.height/2, '#ff6666');
-                    
-                    if(e.health <= 0) {
-                        enemies.splice(i,1);
-                    }
-                    break;
-                }
-            }
+            return names[cat] || cat;
         }
         
-        function placeBlock() {
-            if(woodCount < 5) return;
-            
-            let range = 60;
-            let centerX = player.x + player.width/2;
-            let centerY = player.y + player.height/2;
-            let mouseWorldX = mouseX + cameraX;
-            let mouseWorldY = mouseY;
-            
-            // Находим ближайший блок для размещения
-            let placeX = Math.floor(mouseWorldX / 32) * 32;
-            let placeY = Math.floor(mouseWorldY / 32) * 32;
-            
-            let exists = world.some(b => b.x === placeX && b.y === placeY);
-            if(!exists && Math.abs(centerX - placeX) < range && Math.abs(centerY - placeY) < range) {
-                world.push({
-                    x: placeX,
-                    y: placeY,
-                    width: 32,
-                    height: 32,
-                    type: 'wood',
-                    health: 3
-                });
-                woodCount -= 5;
-                woodElement.innerText = woodCount;
-            }
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
         
-        function addParticle(x, y, color) {
-            for(let i=0;i<6;i++) {
-                particles.push({
-                    x: x, y: y, vx: (Math.random() - 0.5) * 3,
-                    vy: (Math.random() - 0.5) * 3 - 2,
-                    life: 25, color: color, size: Math.random() * 3 + 2
-                });
-            }
-        }
-        
-        function updateGame() {
-            if(!gameRunning) return;
-            
-            // Движение
-            if(leftPressed) player.vx = -3.5;
-            else if(rightPressed) player.vx = 3.5;
-            else player.vx *= 0.8;
-            
-            player.x += player.vx;
-            
-            // Гравитация
-            player.vy += 0.7;
-            player.y += player.vy;
-            player.onGround = false;
-            
-            // Коллизия с блоками
-            for(let block of world) {
-                if(player.x < block.x + block.width &&
-                    player.x + player.width > block.x &&
-                    player.y + player.height > block.y &&
-                    player.y < block.y + block.height) {
-                    
-                    if(player.vy >= 0 && player.y + player.height - block.y < 15) {
-                        player.y = block.y - player.height;
-                        player.vy = 0;
-                        player.onGround = true;
-                    } else if(player.vy < 0) {
-                        player.y = block.y + block.height;
-                        player.vy = 0;
-                    }
-                }
-            }
-            
-            if(jumpRequested && player.onGround) {
-                player.vy = -10;
-                player.onGround = false;
-                jumpRequested = false;
-            }
-            
-            // Камера
-            cameraX = player.x - 350;
-            if(cameraX < 0) cameraX = 0;
-            if(cameraX > worldWidth * 32 - canvasWidth) cameraX = worldWidth * 32 - canvasWidth;
-            
-            // Враги
-            for(let i=0;i<enemies.length;i++) {
-                enemies[i].update();
-                
-                let dx = Math.abs(player.x - enemies[i].x);
-                let dy = Math.abs(player.y - enemies[i].y);
-                if(dx < 35 && dy < 35) {
-                    if(player.invincible <= 0) {
-                        player.health -= 12;
-                        healthElement.innerText = '❤️ ' + player.health;
-                        player.invincible = 40;
-                        
-                        if(player.health <= 0) {
-                            gameRunning = false;
-                            startScreen.style.display = 'flex';
-                        }
-                    }
-                }
-            }
-            
-            // Спавн врагов
-            if(enemies.length < 3 && Math.random() < 0.008) {
-                spawnEnemy();
-            }
-            
-            if(player.invincible > 0) player.invincible--;
-            
-            // Частицы
-            for(let i=0;i<particles.length;i++) {
-                particles[i].x += particles[i].vx;
-                particles[i].y += particles[i].vy;
-                particles[i].life--;
-                if(particles[i].life <= 0) {
-                    particles.splice(i,1);
-                    i--;
-                }
-            }
-        }
-        
-        function draw() {
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-            
-            // Небо
-            const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-            grad.addColorStop(0, '#0a0a2a');
-            grad.addColorStop(1, '#1a1a3a');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            
-            // Облака
-            ctx.fillStyle = 'rgba(255,255,255,0.15)';
-            ctx.beginPath();
-            ctx.ellipse(200, 60, 50, 30, 0, 0, Math.PI*2);
-            ctx.ellipse(250, 50, 40, 25, 0, 0, Math.PI*2);
-            ctx.ellipse(160, 50, 40, 25, 0, 0, Math.PI*2);
-            ctx.fill();
-            
-            // БЛОКИ МИРА
-            for(let block of world) {
-                if(block.x + block.width > cameraX && block.x < cameraX + canvasWidth) {
-                    if(block.type === 'grass') {
-                        ctx.fillStyle = '#5a9e3a';
-                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
-                        ctx.fillStyle = '#4a8e2a';
-                        ctx.fillRect(block.x - cameraX, block.y + block.height - 8, block.width, 8);
-                    } else if(block.type === 'dirt') {
-                        ctx.fillStyle = '#8B5A2B';
-                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
-                        ctx.fillStyle = '#7B4A1B';
-                        for(let i=0;i<3;i++) {
-                            ctx.fillRect(block.x - cameraX + 5 + i*10, block.y + 10, 6, 4);
-                        }
-                    } else if(block.type === 'stone') {
-                        ctx.fillStyle = '#888888';
-                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
-                        ctx.fillStyle = '#666666';
-                        for(let i=0;i<4;i++) {
-                            ctx.fillRect(block.x - cameraX + 4 + i*7, block.y + 8 + (i%2)*16, 4, 4);
-                        }
-                    } else if(block.type === 'wood') {
-                        ctx.fillStyle = '#8B6914';
-                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
-                        ctx.fillStyle = '#6B4914';
-                        ctx.fillRect(block.x - cameraX + 8, block.y, 4, block.height);
-                        ctx.fillRect(block.x - cameraX + 20, block.y, 4, block.height);
-                    } else if(block.type === 'leaf') {
-                        ctx.fillStyle = '#4a8e3a';
-                        ctx.fillRect(block.x - cameraX, block.y, block.width, block.height);
-                        ctx.fillStyle = '#3a7e2a';
-                        for(let i=0;i<4;i++) {
-                            ctx.fillRect(block.x - cameraX + 4 + i*6, block.y + 8, 4, 4);
-                        }
-                    }
-                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-                    ctx.strokeRect(block.x - cameraX, block.y, block.width, block.height);
-                }
-            }
-            
-            // ВРАГИ
-            for(let enemy of enemies) {
-                enemy.draw();
-            }
-            
-            // ЧАСТИЦЫ
-            for(let p of particles) {
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
-            }
-            
-            // ИГРОК (персонаж как в Террарии)
-            ctx.save();
-            if(player.invincible > 0 && Math.floor(Date.now()/50)%2===0) {
-                ctx.fillStyle = '#ffffff';
+        function addToCart(productId) {
+            if (!cart[productId]) {
+                cart[productId] = { quantity: 1 };
             } else {
-                const grad = ctx.createLinearGradient(player.x - cameraX, player.y, player.x - cameraX + player.width, player.y + player.height);
-                grad.addColorStop(0, '#3366ff');
-                grad.addColorStop(1, '#2255dd');
-                ctx.fillStyle = grad;
+                cart[productId].quantity++;
             }
-            ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
-            
-            // Голова
-            ctx.fillStyle = '#ffcc99';
-            ctx.fillRect(player.x - cameraX + 4, player.y - 10, 20, 12);
-            
-            // Волосы
-            ctx.fillStyle = '#664422';
-            ctx.fillRect(player.x - cameraX + 6, player.y - 14, 16, 6);
-            
-            // Глаза
-            if(player.facingRight) {
-                ctx.fillStyle = 'white';
-                ctx.fillRect(player.x - cameraX + 18, player.y - 6, 5, 5);
-                ctx.fillStyle = 'black';
-                ctx.fillRect(player.x - cameraX + 19, player.y - 5, 3, 3);
-            } else {
-                ctx.fillStyle = 'white';
-                ctx.fillRect(player.x - cameraX + 6, player.y - 6, 5, 5);
-                ctx.fillStyle = 'black';
-                ctx.fillRect(player.x - cameraX + 7, player.y - 5, 3, 3);
-            }
-            
-            // Меч/инструмент в руке
-            if(player.tool === 'sword') {
-                ctx.fillStyle = '#cccccc';
-                ctx.fillRect(player.x - cameraX + (player.facingRight ? 25 : -10), player.y + 10, 20, 4);
-                ctx.fillStyle = '#aaaaaa';
-                ctx.fillRect(player.x - cameraX + (player.facingRight ? 40 : -20), player.y + 8, 8, 8);
-            } else if(player.tool === 'pickaxe') {
-                ctx.fillStyle = '#8B6914';
-                ctx.fillRect(player.x - cameraX + (player.facingRight ? 25 : -10), player.y + 10, 18, 4);
-                ctx.fillRect(player.x - cameraX + (player.facingRight ? 38 : -15), player.y + 6, 6, 12);
-            } else if(player.tool === 'axe') {
-                ctx.fillStyle = '#8B6914';
-                ctx.fillRect(player.x - cameraX + (player.facingRight ? 25 : -10), player.y + 10, 16, 4);
-                ctx.fillStyle = '#aaaaaa';
-                ctx.fillRect(player.x - cameraX + (player.facingRight ? 36 : -13), player.y + 4, 10, 10);
-            }
-            
-            // Ноги
-            ctx.fillStyle = '#2255dd';
-            ctx.fillRect(player.x - cameraX + 5, player.y + player.height - 6, 8, 8);
-            ctx.fillRect(player.x - cameraX + 16, player.y + player.height - 6, 8, 8);
-            
-            ctx.restore();
-            
-            // ПРИЦЕЛ
-            ctx.beginPath();
-            ctx.strokeStyle = '#ffcc00';
-            ctx.lineWidth = 2;
-            ctx.arc(mouseX, mouseY, 8, 0, Math.PI*2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(mouseX - 15, mouseY);
-            ctx.lineTo(mouseX - 5, mouseY);
-            ctx.moveTo(mouseX + 5, mouseY);
-            ctx.lineTo(mouseX + 15, mouseY);
-            ctx.moveTo(mouseX, mouseY - 15);
-            ctx.lineTo(mouseX, mouseY - 5);
-            ctx.moveTo(mouseX, mouseY + 5);
-            ctx.lineTo(mouseX, mouseY + 15);
-            ctx.stroke();
-            
-            // Информация об инструменте
-            ctx.font = 'bold 12px monospace';
-            ctx.fillStyle = '#ffcc00';
-            ctx.shadowBlur = 3;
-            let toolName = player.tool === 'pickaxe' ? 'КИРКА' : player.tool === 'axe' ? 'ТОПОР' : player.tool === 'sword' ? 'МЕЧ' : 'БЛОК';
-            ctx.fillText(`🔨 ${toolName}`, canvasWidth - 100, 40);
-            ctx.shadowBlur = 0;
+            saveCart();
+            updateCartCount();
         }
         
-        function gameLoop() {
-            updateGame();
-            draw();
-            requestAnimationFrame(gameLoop);
+        function removeFromCart(productId) {
+            if (cart[productId]) {
+                cart[productId].quantity--;
+                if (cart[productId].quantity <= 0) {
+                    delete cart[productId];
+                }
+            }
+            saveCart();
+            updateCartCount();
+            renderCart();
         }
         
-        // УПРАВЛЕНИЕ
-        document.addEventListener('keydown', (e) => {
-            if(!gameRunning && e.code === 'Space') {
-                startBtn.click();
+        function updateCartCount() {
+            let count = 0;
+            for (let id in cart) {
+                count += cart[id].quantity;
+            }
+            document.getElementById('cartCount').innerText = count;
+        }
+        
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+        
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            let total = 0;
+            let html = '';
+            
+            for (let id in cart) {
+                const product = products.find(p => p.id == id);
+                if (product) {
+                    const itemTotal = product.price * cart[id].quantity;
+                    total += itemTotal;
+                    html += `
+                        <div class="cart-item">
+                            <div class="cart-item-image">${product.image}</div>
+                            <div class="cart-item-info">
+                                <div class="cart-item-title">${product.name}</div>
+                                <div class="cart-item-price">${formatPrice(product.price)} ₽</div>
+                                <div class="cart-item-quantity">
+                                    <button class="qty-btn" onclick="removeFromCart(${product.id})">-</button>
+                                    <span>${cart[id].quantity}</span>
+                                    <button class="qty-btn" onclick="addToCart(${product.id})">+</button>
+                                </div>
+                            </div>
+                            <div style="font-weight: bold;">${formatPrice(itemTotal)} ₽</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (Object.keys(cart).length === 0) {
+                html = '<div style="text-align: center; padding: 40px; color: #888;">Корзина пуста</div>';
+            }
+            
+            container.innerHTML = html;
+            document.getElementById('cartTotal').innerHTML = formatPrice(total) + ' ₽';
+        }
+        
+        function openCart() {
+            renderCart();
+            document.getElementById('cartModal').classList.add('open');
+            document.getElementById('overlay').classList.add('open');
+        }
+        
+        function closeCart() {
+            document.getElementById('cartModal').classList.remove('open');
+            document.getElementById('overlay').classList.remove('open');
+        }
+        
+        function openProductModal(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            const inCart = cart[productId] ? cart[productId].quantity : 0;
+            
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 80px; margin: 20px 0;">${product.image}</div>
+                    <h2 style="margin-bottom: 10px;">${product.name}</h2>
+                    <div style="color: #888; margin-bottom: 15px;">${product.color} | ${getCategoryName(product.category)}</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #ff4444; margin-bottom: 10px;">
+                        ${formatPrice(product.price)} ₽
+                        ${product.oldPrice ? `<span style="font-size: 18px; color: #888; text-decoration: line-through; margin-left: 10px;">${formatPrice(product.oldPrice)} ₽</span>` : ''}
+                    </div>
+                    <p style="color: #666; line-height: 1.5; margin-bottom: 20px;">${product.description}</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="add-to-cart" onclick="addToCart(${product.id}); closeProductModal();" style="flex: 1;">В корзину</button>
+                        <button class="add-to-cart" onclick="closeProductModal()" style="background: #666;">Закрыть</button>
+                    </div>
+                    ${inCart > 0 ? `<p style="margin-top: 15px; color: #888;">Уже в корзине: ${inCart} шт.</p>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('productModal').classList.add('open');
+            document.getElementById('overlay').classList.add('open');
+        }
+        
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('open');
+            document.getElementById('overlay').classList.remove('open');
+        }
+        
+        function checkout() {
+            if (Object.keys(cart).length === 0) {
+                alert('Корзина пуста');
                 return;
             }
-            if(e.code === 'KeyA') leftPressed = true;
-            if(e.code === 'KeyD') rightPressed = true;
-            if(e.code === 'Space') { jumpRequested = true; e.preventDefault(); }
-        });
+            alert('✅ Заказ оформлен!\n\nС вами свяжется менеджер для подтверждения.\n\nСпасибо за покупку!');
+            cart = {};
+            saveCart();
+            updateCartCount();
+            closeCart();
+            renderProducts();
+        }
         
-        document.addEventListener('keyup', (e) => {
-            if(e.code === 'KeyA') leftPressed = false;
-            if(e.code === 'KeyD') rightPressed = false;
-        });
-        
-        // МЫШЬ
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            mouseX = (e.clientX - rect.left) * (canvasWidth / rect.width);
-            mouseY = (e.clientY - rect.top) * (canvasHeight / rect.height);
-            player.facingRight = mouseX > canvasWidth/2;
-        });
-        
-        canvas.addEventListener('click', (e) => {
-            if(!gameRunning) return;
-            if(player.tool === 'block') placeBlock();
-            else attack();
-        });
-        
-        // ВЫБОР ИНСТРУМЕНТА
-        document.querySelectorAll('.slot').forEach(slot => {
-            slot.addEventListener('click', () => {
-                document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
-                slot.classList.add('active');
-                player.tool = slot.dataset.tool;
+        // Фильтры
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                renderProducts();
             });
         });
         
-        function startGame() {
-            generateWorld();
-            enemies = [];
-            particles = [];
-            player.health = 100;
-            woodCount = 10;
-            stoneCount = 5;
-            player.x = 200;
-            player.y = 300;
-            healthElement.innerText = '❤️ 100';
-            woodElement.innerText = woodCount;
-            stoneElement.innerText = stoneCount;
-            gameRunning = true;
-            startScreen.style.display = 'none';
-            
-            for(let i=0;i<2;i++) setTimeout(() => spawnEnemy(), i*2000);
-        }
-        
-        startBtn.addEventListener('click', startGame);
-        
-        let gameRunning = false;
-        generateWorld();
-        gameLoop();
+        renderProducts();
+        updateCartCount();
     </script>
 </body>
-</html>'''
+</html>
+'''
 
 @app.route('/')
 def index():
